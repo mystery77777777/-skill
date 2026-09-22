@@ -1,0 +1,292 @@
+openapi: 3.0.3
+info:
+  title: 小红书转链服务 API
+  description: |
+    小红书笔记链接批量转链服务。提交小红书笔记链接（含 xhslink 短链），异步转换为携带 `xsec_token`、
+    浏览器可直接打开的链接。
+
+    **注意**：所有接口（含业务失败）HTTP 状态码均为 200，业务结果看响应体 `code` 字段（`0` 为成功）。
+    凭证与「小红书互动数采集」服务（xhs-dpt）通用。支持与充值：客服 18722121663。
+  version: 1.0.0
+servers:
+  - url: http://st.aidata366.com/api/v1
+    description: 生产环境
+
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/cli-session:
+    post:
+      summary: 创建扫码登录/注册会话
+      description: |
+        无需鉴权。返回 access_token 与登录/注册页面、二维码地址。
+        注册与登录共用同一会话，用户可自选。会话有效期 10 分钟。
+      security: []
+      tags: [鉴权]
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Envelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          access_token:
+                            type: string
+                            example: f83e0c4bfa7918318843646568ecd43f
+                          expires_in:
+                            type: integer
+                            example: 600
+                          login_path:
+                            type: string
+                            example: /cli-login.html?key=f83e0c4bfa7918318843646568ecd43f
+                          qr_path:
+                            type: string
+                            example: /api/v1/auth/cli-session/f83e0c4bfa7918318843646568ecd43f/qr.png
+                          register_path:
+                            type: string
+                            example: /cli-register.html?key=f83e0c4bfa7918318843646568ecd43f
+                          register_qr_path:
+                            type: string
+                            example: /api/v1/auth/cli-session/f83e0c4bfa7918318843646568ecd43f/qr.png?page=cli-register
+
+  /auth/cli-session/check:
+    post:
+      summary: 校验会话并换取 token
+      description: |
+        无需鉴权。轮询本接口直到 status 变为 ready 即可拿到 token。
+        pending = 用户尚未完成扫码/注册。
+      security: []
+      tags: [鉴权]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [access_token]
+              properties:
+                access_token:
+                  type: string
+                  pattern: '^[0-9a-f]{16,64}$'
+                  example: f83e0c4bfa7918318843646568ecd43f
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Envelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          status:
+                            type: string
+                            enum: [pending, ready]
+                          token:
+                            type: string
+                            description: 仅 status=ready 时返回
+                          phone:
+                            type: string
+                          quota_balance:
+                            type: integer
+                            example: 10
+
+  /auth/cli-session/{key}/qr.png:
+    get:
+      summary: 获取会话二维码图片
+      security: []
+      tags: [鉴权]
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema: { type: string }
+        - name: page
+          in: query
+          description: 传 cli-register 时返回注册页二维码
+          schema: { type: string, enum: [cli-register] }
+      responses:
+        '200':
+          description: PNG 图片
+          content:
+            image/png:
+              schema: { type: string, format: binary }
+
+  /auth/logout:
+    post:
+      summary: 吊销当前 token
+      tags: [鉴权]
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+
+  /user/profile:
+    get:
+      summary: 查询账号信息与剩余点数
+      tags: [账号]
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Envelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          id: { type: integer, example: 1 }
+                          phone: { type: string, example: '13800000000' }
+                          nickname: { type: string, example: '' }
+                          quota: { type: integer, example: 10, description: 剩余点数，1 点 = 1 条有效链接 }
+                          role: { type: string, example: user }
+                          last_login_at: { type: string, example: '' }
+                          created_at: { type: string, example: '2026-01-01T00:00:00' }
+
+  /tasks:
+    post:
+      summary: 提交转链任务
+      description: |
+        单批 1~50 条。提交时按有效条数预扣点数，异步处理，需用 GET /tasks/{task_id} 轮询结果。
+
+        **幂等键** `X-Idempotency-Key` = sha256(所有 URL 按序以 \n 拼接).hexdigest() 前 32 位。
+        同键重复提交返回原任务且不重复扣费。
+      tags: [转链任务]
+      parameters:
+        - name: X-Idempotency-Key
+          in: header
+          required: true
+          description: 32 位幂等键
+          schema: { type: string, example: 3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8c }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                items:
+                  type: array
+                  minItems: 1
+                  maxItems: 50
+                  items:
+                    type: object
+                    required: [id, url]
+                    properties:
+                      id:
+                        type: integer
+                        description: 条目标号，从 1 递增
+                        example: 1
+                      url:
+                        type: string
+                        description: 支持 explore / discovery/item / xhslink 短链
+                        example: https://www.xiaohongshu.com/explore/6970ac3c000000000a03d7d5
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Envelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          task_id: { type: string, example: t_20260917_a1b2c3 }
+                          total: { type: integer, example: 2 }
+                          valid_count: { type: integer, example: 2 }
+                          invalid_count: { type: integer, example: 0 }
+                          charged: { type: integer, example: 2 }
+                          quota_balance: { type: integer, example: 8 }
+                          status: { type: string, example: pending }
+
+  /tasks/{task_id}:
+    get:
+      summary: 查询任务状态与转链结果
+      description: |
+        终态：done / partial_failed / failed。其余状态继续轮询（建议间隔 2s，总超时 120s）。
+      tags: [转链任务]
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema: { type: string, example: t_20260917_a1b2c3 }
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Envelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          task_id: { type: string }
+                          status:
+                            type: string
+                            enum: [pending, processing, running, done, partial_failed, failed]
+                          total: { type: integer }
+                          valid_count: { type: integer }
+                          invalid_count: { type: integer }
+                          success_count: { type: integer }
+                          fail_count: { type: integer }
+                          charged_quota: { type: integer }
+                          refunded_quota: { type: integer }
+                          items:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id: { type: integer, example: 1 }
+                                url: { type: string }
+                                note_id: { type: string, example: 6970ac3c000000000a03d7d5 }
+                                new_url:
+                                  type: string
+                                  description: 转换后链接，已携带 xsec_token
+                                  example: https://www.xiaohongshu.com/explore/6970ac3c000000000a03d7d5?xsec_token=ABxxx
+                                status:
+                                  type: string
+                                  enum: [success, failed, invalid]
+                                fail_reason: { type: string, example: '' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: 通过扫码登录后由 /auth/cli-session/check 下发
+
+  schemas:
+    Envelope:
+      type: object
+      description: |
+        统一响应信封。HTTP 状态码恒为 200，业务成败看 code：0 成功，非 0 见错误码表
+        （1001 参数错误 / 1002 未登录或 token 失效 / 2003 需要图形验证码 / 3001 点数不足 /
+        3002 超批量上限 / 3003 任务不存在 / 4290 限流）。
+      properties:
+        code: { type: integer, example: 0 }
+        message: { type: string, example: ok }
+        data: { nullable: true }

@@ -1,0 +1,10 @@
+{
+  "name": "xhs-comments",
+  "version": "1.0.0",
+  "private": true,
+  "description": "小红书笔记评论内容采集 Skill CLI (昵称/内容/点赞数/IP属地/子评论数)",
+  "main": "cli.js",
+  "engines": {
+    "node": ">=18"
+  }
+}
