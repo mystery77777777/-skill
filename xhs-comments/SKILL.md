@@ -1,16 +1,19 @@
 ---
 name: xhs-comments
-version: 1.1.0
-description: 小红书笔记评论内容采集工具（用户洞察）。当用户需要采集/查询小红书笔记的评论内容——昵称、评论正文、点赞数、IP 属地、子评论数，提交一批笔记链接一键批量采集、导出评论明细 CSV（Excel 直开），或提到"小红书评论采集/评论内容/评论抓取/用户评论/评论导出/舆情/笔记评论"时使用本 skill。适合评论区舆情监测、用户反馈收集、爆款笔记评论洞察、KOL 粉丝声音分析等场景。**笔记链接必须带 xsec_token 参数；缺 token / xhslink 短链会自动调用转链 skill xhs-convert-url-pro 转换后提交**。收费服务（1 篇笔记 = 1 点数，注册送 10 点）。
+slug: xhs-pinglun
+displayName: 小红书评论分步采集
+version: 2.0.1
+description: 小红书笔记评论分步采集工具（用户洞察，会话制）。当用户需要采集/查询小红书笔记的评论内容——昵称、评论正文、点赞数、IP 属地、子评论数，按页逐步采集并实时返回给用户、可按需展开子评论、导出评论明细 CSV（Excel 直开），或提到"小红书评论采集/评论内容/评论抓取/用户评论/评论导出/舆情/笔记评论"时使用本 skill。适合评论区舆情监测、用户反馈收集、爆款笔记评论洞察、KOL 粉丝声音分析等场景。**转链与互动数采集免费；每采一页主评论或展开一次子评论扣 1 点数（注册送 10 点）。**
 ---
 
-# 小红书评论内容采集 Skill（xhs-comments）
+# 小红书评论分步采集 Skill（xhs-comments v2）
 
-封装「小红书能力平台」（FastAPI，`/api/v1`）的 CLI，供 AI agent 调用：提交小红书笔记链接 → 异步采集 → 拿到该笔记的**评论明细**（评论昵称、正文、点赞数、IP 属地、子评论数）。多账号批量采、结果直接导出 CSV（BOM 头，Excel 直开不乱码）。
+封装「小红书能力平台」（FastAPI，`/api/v1`）的 CLI，供 AI agent 调用。v2 起改为**分步会话制**：先免费拿到笔记评论总数 → 用户确认后按页/按展开逐步计费采集，每一步的结果立即返回给你展示给用户。
 
-- **能采什么**：公开笔记的评论明细（`nickname` 昵称、`content` 评论正文、`like_count` 点赞数、`ip_location` IP 属地、`sub_count` 子评论数、`comment_id` / `root_comment_id`）。可控制单篇上限（`--max N`，0=不限制，封顶 500）。
+- **能采什么**：公开笔记的评论明细（`nickname` 昵称、`content` 评论正文、`like_count` 点赞数、`ip_location` IP 属地、`sub_count` 子评论数、`comment_id` / `root_comment_id`）。主评论每页 10 条（含 0~2 条内嵌子评论预览）；子评论点一次展开约 5 条。
 - **适用场景**：评论区舆情监测、用户反馈收集、爆款笔记评论洞察、KOL 粉丝声音分析、竞品笔记评论对比。
-- **省心机制**：批量采、无效链接不扣费、服务侧失败按条自动返还点数（详见「计费规则提示」）、Agent 友好（stdout 纯 JSON + 统一退出码）。
+- **计费模型（与 v1 不同）**：建会话（含自动转链补 xsec_token + 互动数采集）**免费**；之后**每执行一步扣 1 点数**——「采一页主评论」是一步，「对某条主评论展开一次子评论」也是一步。
+- **省心机制**：无效链接不建会话不扣费、采到底/no_more 的步不扣费、服务侧失败自动返还当步点数、Agent 友好（stdout 纯 JSON + 统一退出码）。
 - 采集由**平台调度内网浏览器节点**完成（节点登录态在浏览器端人工维护，平台不持有账号）。
 - 客户端是零依赖 CLI（Node ≥ 18，无需 `npm install`），全部采集逻辑在后端完成。
 
@@ -23,25 +26,28 @@ description: 小红书笔记评论内容采集工具（用户洞察）。当用�
 
 ## 收费价格
 
-- **每条有效笔记 0.2 元**（每 1 点数抵扣 1 篇笔记的采集；无效链接不扣费）。
-- 注册即送 **10 免费点数**（可采集 10 篇笔记）；点数不足时提示用户充值。
-- 充值或大量购买可享优惠，请联系客服 **18722121663** 洽谈。
+- **点数换算：0.1 元 = 1 点数。**
+- **每步采集 0.1 元**（1 点数 = 1 步：一页主评论 10 条，或一次子评论展开约 5 条）。
+- 建会话（转链 + 互动数查询）免费；注册即送 **10 免费点数**（可采 10 步）。
+- 点数不足时提示用户充值；充值或大量购买可享优惠，请联系客服 **18722121663** 洽谈。
 
-## ⚠️ 链接要求（重要，提交前必读）
+## ⚠️ 交互协议（agent 必须严格遵守）
 
-**本 skill 只接受带 `xsec_token` 参数的小红书笔记链接**，这是硬性要求（客户端提交前会做本地预检——域名白名单与 `xsec_token` 存在性检查，不通过直接报错、不扣费；注意这不是完整校验，服务端还会做更严格校验，未通过的条目判 `invalid` 不计费）：
+v2 是**人机分步交互**，不是一次性跑完。请按下面的流程驱动对话：
 
-1. **标准链接必须带 `xsec_token` 参数**，两种合法形态：
-   - `https://www.xiaohongshu.com/explore/<note_id>?xsec_token=<token>&...`
-   - `https://xiaohongshu.com/discovery/item/<note_id>?xsec_token=<token>&...`
+1. **建会话（免费）**：`node cli.js start --url "<笔记链接>"`。直链（带不带 xsec_token 均可）和 `xhslink.com` 短链都直接传，服务端自动转链补齐 token，无需调用其它转链 skill。
+2. **报数确认（必须）**：把返回的 `metrics.comment_count`（评论总数）和 `estimated_pages`（预估页数，每页 10 条 = 1 点）**明确告知用户**，例如「这篇笔记共约 326 条评论，全采约需 33 页（33 点）。要开始采集吗？」。**未经用户确认不要执行任何 step。**
+3. **按页采集**：用户确认后 `node cli.js step --session <id>` 采下一页主评论（默认即 --page）。把本页 10 条评论整理展示给用户。
+4. **每页采完询问下一步**：
+   - 若 `has_more_main=true`，问用户「是否继续采下一页（再扣 1 点）？」
+   - 若返回的 `expandable` 非空（本页有主评论含可展开子评论），列出这些评论（`root_comment_id`、子评论总数、已采数），问用户「是否展开某条的子评论（每次展开约 5 条、扣 1 点）？」
+5. **展开子评论**：用户指定后 `node cli.js step --session <id> --expand --root <root_comment_id>`。返回本次约 5 条子评论；若 `sub_has_more=true`，**先展示本次结果，再问用户是否继续展开该条**（继续再扣 1 点）。
+6. **结束**：用户说够了 → `node cli.js finish --session <id>` 结束会话释放采集节点；需要文件 → `node cli.js export --session <id> --out 评论.csv`。
+7. **20 分钟空闲租约**：每步采完后会话保持 20 分钟；超时无继续指令会话自动过期、节点释放。过期后（错误码 3006 / status=expired）如需继续，只能重新 `start` 建会话从头采（原会话已采数据仍可用 `comments`/`export` 读取）。
 
-2. **链接未带 `xsec_token` → 无需人工处理**：本 skill 会**自动调用**转链 skill **`xhs-convert-url-pro`** 转换该链接（转换后自动继续提交）。注意转链消耗转链服务点数；如不希望自动转链，加 `--no-convert` 参数则会直接报错退回。
+**no_more 免扣费**：`step` 返回 `no_more: true` 表示主评论已采完（或该主评论子评论已全部展开），**该次请求不扣费**，如实告知用户。
 
-3. **`xhslink.com` 短链同样自动处理**：短链会先经转链 skill 自动展开为带 `xsec_token` 的最终链接再提交（无需手动浏览器跳转）。
-
-4. 提交前逐条检查链接；链接格式不合法 / 非小红书域名等无法自动修复的问题会拒绝整批提交并列出问题条目（不会部分扣费）。
-
-> agent 工作流提示：拿到用户给的笔记链接后直接提交本 skill 即可，缺 token / 短链会被自动转链；只有当自动转链也失败时才需要人工介入（检查链接有效性或提示用户）。
+**中途失败自愈**：若采集节点的标签页意外被关，服务端会自动重试一次（重开页面并按进度快进恢复），只扣 1 次费用；重试仍失败则当步点数自动返还、会话 failed，如实告知用户。
 
 ## 前置条件
 
@@ -58,8 +64,9 @@ description: 小红书笔记评论内容采集工具（用户洞察）。当用�
 ## 输出规约（重要）
 
 - **stdout 只输出 JSON**：成功 `{"ok":true,"data":{...}}`，失败 `{"ok":false,"code":<业务码>,"message":"..."}`。直接解析 stdout 即可。
-- 交互提示、轮询进度一律走 **stderr**，不要解析。
+- 交互提示（如「请把评论数报给用户确认」）一律走 **stderr**，不要解析，但其中给用户的引导话术应照做。
 - 退出码：`0` 成功；`1` 参数/用法错误；`2` 认证失败（重新 login）；`3` 点数不足；`4` 网络/服务不可达；`5` 其它业务错误。
+- `step` 单次最长约 3 分钟（节点滚动/展开 + 回传），属正常现象，不要中途重试。
 
 ## 命令清单
 
@@ -69,10 +76,8 @@ description: 小红书笔记评论内容采集工具（用户洞察）。当用�
 node cli.js version
 ```
 
-输出 skill 名、版本号、能力名、node 版本。升级后建议先跑一次确认版本：
-
 ```json
-{"ok":true,"data":{"name":"xhs-comments","version":"1.0.0","capability":"xhs_comments"}}
+{"ok":true,"data":{"name":"xhs-comments","version":"2.0.1","capability":"xhs_comments"}}
 ```
 
 ### register — 注册（注册即送 10 点数）
@@ -121,75 +126,103 @@ node cli.js quota
 {"ok":true,"data":{"quota":10,...}}
 ```
 
+### start — 建立采集会话（免费）
+
+```bash
+node cli.js start --url "https://www.xiaohongshu.com/explore/6ac86a34000000001801361e?xsec_token=..."
+node cli.js start --url "https://xhslink.com/a/xxxx"     # 短链直接传, 服务端自动展开转链
+```
+
+- 服务端自动完成：链接解析 → 短链/缺 token 自动转链（免费）→ 互动数采集（免费）→ 建会话。
+- 链接无效 / 笔记不可见 → 直接报错，**不建会话不扣费**。
+
+输出示例：
+
+```json
+{"ok":true,"data":{"session_id":"9f1c...32位","note_id":"6ac86a34000000001801361e",
+ "note_url":"https://www.xiaohongshu.com/explore/...?xsec_token=...","title":"示例笔记标题",
+ "status":"active",
+ "metrics":{"comment_count":"326","liked_count":"1.2万","collected_count":"890","share_count":"45"},
+ "estimated_pages":33}}
+```
+
+**拿到结果后必须先把评论总数和预估页数报给用户确认，再开始 step（见「交互协议」）。**
+
+### step — 步进采集（每步 1 点）
+
+```bash
+node cli.js step --session <id>                              # 采下一页主评论（默认 --page）
+node cli.js step --session <id> --page                       # 同上, 显式写法
+node cli.js step --session <id> --expand --root <主评论id>    # 对指定主评论展开一次子评论
+```
+
+采一页主评论的输出示例：
+
+```json
+{"ok":true,"data":{"session_id":"9f1c...","type":"page","page_no":1,
+ "comments":[{"comment_id":"c1","root_comment_id":"","nickname":"小红薯","content":"太好看了！",
+              "like_count":125,"ip_location":"浙江","sub_count":3}, ...],
+ "has_more_main":true,
+ "expandable":[{"root_comment_id":"c1","sub_comment_count":12,"subs_collected":2,"has_more":true}],
+ "mains_collected":10,"subs_collected":5,"quota_balance":9}}
+```
+
+展开一次子评论的输出示例：
+
+```json
+{"ok":true,"data":{"session_id":"9f1c...","type":"expand","root_comment_id":"c1",
+ "comments":[{"comment_id":"s1","root_comment_id":"c1","nickname":"路人甲","content":"求链接",
+              "like_count":12,"ip_location":"上海","sub_count":0}, ...],
+ "sub_has_more":true,"subs_collected_for_root":7,"quota_balance":8}}
+```
+
+- `expandable` 中 `has_more=true` 的条目表示子评论还没展开完，可继续 `--expand`。
+- 已采完时返回 `{"no_more":true,...}`（不扣费）。
+
+### status — 查询会话状态（免费）
+
+```bash
+node cli.js status --session <id>
+```
+
+返回会话状态（active/done/expired/failed）、累计采集量（pages/mains/subs）、已扣费步数、点数余额、互动数。
+
+### comments — 拉取已累计的评论明细（免费）
+
+```bash
+node cli.js comments --session <id> --page 1 --page-size 100
+```
+
+分页读取本会话已落库的全部评论（含历史，不止增量），适合中途回顾。
+
+### export — 导出累计结果 CSV（免费）
+
+```bash
+node cli.js export --session <id> --out 评论明细.csv
+```
+
+下载本会话已累计的全部评论 CSV（BOM 头，Excel 直开不乱码）：昵称/内容/点赞数/IP属地/子评论数。
+
+### finish — 结束会话（免费）
+
+```bash
+node cli.js finish --session <id>
+```
+
+主动结束会话、释放采集节点（之后该节点可接其它任务）。不 finish 也会在空闲 20 分钟后自动过期。
+
+### sessions — 列出自己的会话（免费）
+
+```bash
+node cli.js sessions
+node cli.js sessions --status active --page 1
+```
+
 ### logout — 登出（切换账号）
 
 ```bash
 node cli.js logout
 ```
-
-### submit — 提交评论采集任务
-
-```bash
-node cli.js submit --url "https://www.xiaohongshu.com/explore/69fae92d000000001a02e31b?xsec_token=..." \
-                   --url "https://xiaohongshu.com/discovery/item/6773d92500000000140263e6?xsec_token=..."
-node cli.js submit --file urls.txt              # 每行一条笔记链接, 忽略空行与 # 注释行
-node cli.js submit --file urls.txt --wait        # 提交后轮询等待终态（推荐）
-node cli.js submit --url <链接> --max 200        # 单篇最多采集 200 条评论 (0=不限制, 封顶 500)
-node cli.js submit --url <链接> --force          # 跳过 24h 内容去重强制重提
-```
-
-- `--url` 可重复；`--file` 按行读取；二者可混合；总数 1~50 条。
-- `--max N`（`--comment-max` 同义）：单篇评论采集上限，非负整数；0=不限制，服务端封顶 500，不传默认 100。
-- **自动转链（默认开启）**：缺 `xsec_token` 的裸链接 / `xhslink.com` 短链会自动调用同级转链 skill `xhs-convert-url-pro` 转换（消耗转链服务点数），转换成功后自动继续提交；转链失败的条目会报错列出明细。`--no-convert` 关闭自动转链，改为直接报错退回。
-- **链接要求（客户端预检；服务端还有更严格校验，未通过条目判 invalid 不计费）**：`xiaohongshu.com/explore/<id>` 或 `/discovery/item/<id>` 链接；链接格式不合法 / 非小红书域名直接拒绝整批。
-- 每条自动生成递增 client_id；幂等键按链接内容派生，同批重试不重复扣费；同一用户同一笔记 24h 内默认去重（防重复扣费），`--force` 可强制重提。
-
-输出示例（不带 `--wait`）：
-
-```json
-{"ok":true,"data":{"task_id":"t_20260916_708f29","total":2,"valid_count":2,"invalid_count":0,"charged":2,"quota_balance":8,"status":"pending"}}
-```
-
-带 `--wait` 时最终输出同 `query` 的完整结果。
-
-### query — 查询任务 / 拉取结果
-
-```bash
-node cli.js query <task_id>                          # 查一次
-node cli.js query <task_id> --wait                   # 轮询直到终态
-node cli.js query <task_id> --wait --interval 3 --timeout 300
-```
-
-- `--interval` 轮询间隔秒数（默认 2），`--timeout` 总超时秒数。
-- 终态：`done`（全部成功）/ `partial_failed`（部分失败）/ `failed`（全部失败）。
-
-终态输出示例：
-
-```json
-{"ok":true,"data":{"task_id":"t_20260916_08b41751","status":"done","success_count":1,"fail_count":0,
- "items":[{"id":1,"note_url":"https://www.xiaohongshu.com/explore/...","status":"success",
-   "result":{"note_id":"69fae92d000000001a02e31b","title":"FILM｜【海光集团】国庆短片",
-             "comment_count":36,
-             "comments":[
-               {"comment_id":"c1","root_comment_id":"","nickname":"小红薯","content":"太好看了！",
-                "like_count":125,"ip_location":"浙江","sub_count":3},
-               {"comment_id":"c2","root_comment_id":"c1","nickname":"路人甲","content":"求链接",
-                "like_count":12,"ip_location":"上海","sub_count":0}
-             ]}}]}}
-```
-
-**解读要点（agent 必读）**：
-- `comment_count` 为本次实际采集到的评论数；`comments` 为评论明细数组（昵称/内容/点赞/属地/子评论）。
-- 失败条目的 `fail_reason` 会透出具体原因（笔记不可见 / 风控拦截等）。
-- 评论含用户公开昵称与 IP 属地等个人信息，向用户展示/落库时遵守下方「红线」的数据保留与使用边界。
-
-### export — 导出 CSV
-
-```bash
-node cli.js export <task_id> --wait --out out.csv
-```
-
-生成两段式 CSV（BOM 头，Excel 直开不乱码）：笔记汇总 + 评论明细（昵称/内容/点赞数/IP属地/子评论数）。适合把结果直接交给用户。
 
 ### config — 配置管理
 
@@ -200,38 +233,36 @@ node cli.js config show        # token 脱敏显示
 
 ## 典型工作流（agent 照此执行）
 
-1. 拿到用户给的笔记链接后**直接提交本 skill**；缺 `xsec_token` / `xhslink` 短链会被自动转链（无需先手动调转链 skill）。
-2. `node cli.js quota` — 确认剩余点数 ≥ 待采集笔记数。
-3. `node cli.js submit --url <链接1> --url <链接2> ... --max 200 --wait` — 一步拿到终态结果（笔记多时用 `--file`）。
-4. 解析 stdout JSON：遍历 `data.items`，把 `status==="success"` 条目的 `result.comments` 整理成表格/引用返回给用户；`failed`/`invalid` 条目附 `fail_reason` 说明。
-5. 用户要文件时：`node cli.js export <task_id> --wait --out 评论明细.csv`，把 CSV 路径交给用户。
+1. 拿到用户给的笔记链接后 `node cli.js quota` 确认有余额，然后 `node cli.js start --url "<链接>"`（短链/裸链直接传，自动转链）。
+2. 把 `comment_count` 和 `estimated_pages` 报给用户，说明全采预估点数，**等用户确认**。
+3. 循环：`step --session <id>` 采一页 → 展示本页 10 条 → 报告 `has_more_main` 与 `expandable` 列表 → 问用户「继续下一页？展开哪条的子评论？还是结束？」
+4. 用户要子评论：`step --session <id> --expand --root <id>` → 展示本次约 5 条 → `sub_has_more` 为 true 时问是否继续展开。
+5. 用户说结束：`finish --session <id>`；要文件：`export --session <id> --out 评论明细.csv`，把 CSV 路径交给用户。
+6. 全程注意 20 分钟空闲上限，用户长时间未回复后先 `status` 确认会话是否还活着。
 
 ## 错误处理指引
 
 | code | 含义 | agent 下一步 |
 |---|---|---|
-| 1001 | 参数错误 / **链接校验未通过** | 链接缺 `xsec_token` / 短链默认已自动转链，走到本错误说明自动转链也失败：按消息明细检查链接有效性后重试；或加 `--no-convert` 排查（退出码 1） |
+| 1001 | 参数错误 / 链接无效 / 笔记不可见 | 检查链接有效性；笔记已删/私密则如实告知（退出码 1） |
 | 1002 / 1003 | 未登录 / token 失效 | 未注册走 `register --link`（送 10 点数），已有账号走 `login --link`；完成后 `--check`（退出码 2） |
 | LOGIN_PENDING / LOGIN_EXPIRED | 用户未完成 / 会话过期 | 提醒用户完成扫码后重试 `--check`，或重新 `--link`（退出码 2） |
 | 2003 | 需要图形验证码 | 终端无法完成，统一走 `--link`；仍无法解决拨打客服电话 18722121663 |
 | 3001 | 点数不足 | 提示用户拨打客服电话 18722121663 充值，不要重试（退出码 3） |
-| 3002 | 超单次批量上限 | 拆分为 ≤50 条/批重新提交 |
-| 3003 / 3004 | 任务或导出不存在 | 检查 task_id / export_id 是否属于当前账号 |
-| 条目 `invalid` | 链接不合法 / 24h 内重复 | 按 fail_reason 提示；重复提交可 `--force` |
-| 任务 `partial_failed` | 部分条目失败 | fail_reason 已透出；服务侧/风控原因失败的条目点数已自动返还，可稍后重提 |
+| 3006 | 会话不存在/已过期/已结束 | 20 分钟空闲会自动过期；已采数据可用 `comments`/`export` 读取，继续采集需重新 `start` |
+| 5001 | 采集服务暂不可用（无在线节点/节点掉线） | 稍后重试；持续不可用时提示用户联系客服 18722121663 |
 | 4290 | 触发限流 | 稍等后重试（Retry-After） |
-| TIMEOUT | 轮询超时 | 任务未结束，稍后 `query <task_id>` 再查（退出码 5） |
 | NETWORK_ERROR | 网络/服务不可达 | 检查 `config show` 的 base_url（退出码 4） |
 
 ## 计费规则提示
 
-- 提交时按**有效笔记条数预扣**（1 篇 = 1 点数）；无效链接（非官方域名/格式错误）不扣费。
-- **自动返还**：服务侧故障、风控拦截、节点掉线等未采集到数据的条目，点数按条自动返还（`refunded_quota` 体现），可稍后重提。
-- **不返还**：笔记不可见（已删除/私密/审核中）属业务性失败。
-- 同一用户同一笔记 24h 内默认去重；`--force` 强制重提会正常扣费。
+- **免费**：start（含自动转链 + 互动数采集）、status / comments / sessions / finish / export / quota，以及返回 `no_more` 的 step。
+- **每步 1 点**：一次 `step --page`（一页主评论）或一次 `step --expand`（一次子评论展开）。
+- **自动返还**：服务侧故障（节点掉线且自愈重试也失败、风控拦截等）的当步点数自动返还；会话置 failed 时已采数据仍可读取。
+- **不返还**：笔记中途被删/转私密等业务性失败已完成的部分正常计费。
 
 ## 红线
 
 - 仅采集**公开**笔记数据；不用于任何违法违规用途。
-- 不要向用户承诺 100% 成功；风控导致的失败如实透出（fail_reason）。
-- 评论含用户公开昵称、IP 属地等个人信息：**仅用于用户已授权或公开可获取的舆情/反馈分析场景**，遵守平台与数据合规要求；不在未授权场景下转售、滥用或长期留存可识别个人信息；CSV 导出文件按平台规则保留（默认 7 天），告知用户自行妥善保管。
+- 不要向用户承诺 100% 成功；风控导致的失败如实透出。
+- 评论含用户公开昵称、IP 属地等个人信息：**仅用于用户已授权或公开可获取的舆情/反馈分析场景**，遵守平台与数据合规要求；不在未授权场景下转售、滥用或长期留存可识别个人信息；CSV 导出文件请告知用户自行妥善保管。

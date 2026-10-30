@@ -21,7 +21,7 @@ const {
 const CAPABILITY = 'xhs_collect';
 const MIN_BATCH = 1;
 const MAX_BATCH = 50;
-const VERSION = '1.0.0';
+const VERSION = '2.0.1';
 const DOWNLOAD_TIMEOUT_MS = 60000; // 导出文件下载超时 (放宽于 API 15s, 防半开连接永久挂起)
 
 // ---------------------------------------------------------------- 参数解析

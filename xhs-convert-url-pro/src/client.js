@@ -117,6 +117,34 @@ class ApiClient {
   getTask(taskId) {
     return this.request('GET', `/tasks/${encodeURIComponent(taskId)}`);
   }
+
+  // ---- dy comments session (dy_comments 分步会话采集, 2026-10-15) ----
+  // 与 xhs comments session 平行, 路径前缀 /dy/comments; 步进参数为 root_cid
+  createDyCommentSession(url) {
+    // 建会话内含节点免费 probe 探测 (服务端默认 60s 超时), 放宽超时
+    return this.request('POST', '/dy/comments/sessions', { body: { url }, timeoutMs: 90000 });
+  }
+  getDyCommentSession(sessionId) {
+    return this.request('GET', `/dy/comments/sessions/${encodeURIComponent(sessionId)}`);
+  }
+  listDyCommentSessions(page = 1, pageSize = 20, status = '') {
+    const q = `?page=${page}&page_size=${pageSize}` +
+      (status ? `&status=${encodeURIComponent(status)}` : '');
+    return this.request('GET', '/dy/comments/sessions' + q);
+  }
+  stepDyCommentSession(sessionId, type, rootCid = '') {
+    // 步进服务端最长执行 ~180s (滚动一页/展开一次 + 节点回传), 放宽超时
+    return this.request('POST', `/dy/comments/sessions/${encodeURIComponent(sessionId)}/step`, {
+      body: { type, root_cid: rootCid }, timeoutMs: 200000,
+    });
+  }
+  finishDyCommentSession(sessionId) {
+    return this.request('POST', `/dy/comments/sessions/${encodeURIComponent(sessionId)}/finish`);
+  }
+  listDySessionComments(sessionId, page = 1, pageSize = 100) {
+    return this.request('GET',
+      `/dy/comments/sessions/${encodeURIComponent(sessionId)}/comments?page=${page}&page_size=${pageSize}`);
+  }
 }
 
 module.exports = { ApiClient, BizError, NetworkError, REQUEST_TIMEOUT_MS, allowInsecureTls };

@@ -1,7 +1,9 @@
 ---
 name: xhs-convert-url-pro
-version: 2.0.0
-description: 小红书笔记链接批量转链工具。当用户提到小红书、转链、链接转换、xhslink，或要求把小红书笔记链接（含短链）转换为携带xsec_token的且浏览器可以直接打开观看的新链接时使用本 skill。转链结果可直接用于「小红书互动数采集」skill（xhs-dpt）。收费服务（1 条 = 1 点数，注册送 10 点）。
+slug: xhs-link-convert
+displayName: 小红书笔记链接转链
+version: 2.0.1
+description: 小红书笔记链接批量转链工具。当用户提到小红书、转链、链接转换、xhslink，或要求把小红书笔记链接（含短链）转换为携带xsec_token的且浏览器可以直接打开观看的新链接时使用本 skill。转链结果可直接用于「小红书互动数采集」skill（xhs-dpt）。收费服务（1 条 = 2 点数，注册送 10 点）。
 ---
 
 # 小红书转链 Skill（xhs-convert-url-pro）
@@ -19,7 +21,8 @@ description: 小红书笔记链接批量转链工具。当用户提到小红书�
 
 ## 收费价格
 
-- **每条有效转链 0.2 元**（每 1 点数抵扣 1 条 URL 的转换；无效链接不扣费）。
+- **点数换算：0.1 元 = 1 点数。**
+- **每条有效转链 0.2 元**（每 2 点数抵扣 1 条 URL 的转换；无效链接不扣费）。
 - 注册即送 **10 免费点数**；点数不足时提示用户充值。
 - 充值或大量购买可享优惠，请联系客服 **18722121663** 洽谈。
 
@@ -52,7 +55,7 @@ node cli.js version
 输出 skill 名、版本号、node 版本、配置文件路径。升级 skill 后建议先跑一次，确认版本号与预期一致。输出示例：
 
 ```json
-{"ok":true,"data":{"name":"xhs-convert-url-pro","version":"2.0.0","node_version":"v22.22.2","config_path":"C:\\Users\\<user>\\.xhs-platform\\config.json"}}
+{"ok":true,"data":{"name":"xhs-convert-url-pro","version":"2.0.1","node_version":"v22.22.2","config_path":"C:\\Users\\<user>\\.xhs-platform\\config.json"}}
 ```
 
 ### register — 注册（注册即送 10 点数）
@@ -218,7 +221,7 @@ node cli.js config show        # token 脱敏显示
 
 ## 计费规则提示
 
-- 每条**有效** URL 扣 1 点数（提交时预扣）；无效链接（非笔记链接/格式错误）不扣费。
+- 每条**有效** URL 扣 2 点数（提交时预扣）；无效链接（非笔记链接/格式错误）不扣费。
 - 短链（xhslink）还原失败自动返还该条点数（`refunded_quota` 体现）。
 - 转链服务登录态失效（服务侧临时故障）同样按条自动返还；由此整单失败且全额返还的任务，重提同一批链接会自动重新受理。
 - 已进入转链服务后失败的条目（如笔记已删）**不返还**点数。

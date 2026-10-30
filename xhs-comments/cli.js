@@ -1,38 +1,34 @@
 #!/usr/bin/env node
 'use strict';
 /**
- * cli.js — 小红书笔记评论内容采集 CLI (能力: xhs_comments, 自包含)。
+ * cli.js — 小红书笔记评论分步采集 CLI v2 (能力: xhs_comments 会话制, 自包含)。
  *
- * 输出规约 (对齐 xhs-dpt / xhs-convert-url-pro): stdout 只输出 JSON, 提示走 stderr。
+ * v2 交互协议 (2026-10-10 起, 替代 v1 一次性整单采集):
+ *   1. start  建会话 (免费: 服务端自动转链补 xsec_token + 互动数采集),
+ *             返回评论总数与预估页数 → 必须把数字报给用户确认后再开始计费采集
+ *   2. step --page          采一页主评论 (10 条+内嵌子评论) = 扣 1 点
+ *      step --expand --root 对指定主评论点一次展开 (约 5 条子评论) = 扣 1 点
+ *      每步返回增量结果 + has_more / 可展开列表, 由 AI 询问用户是否继续
+ *   3. finish 主动结束会话 (空闲 20 分钟服务端也会自动过期并释放采集节点)
+ *
+ * 输出规约: stdout 只输出 JSON, 提示走 stderr。
  * 退出码: 0 成功 / 1 参数错误 / 2 认证失败 / 3 点数不足 / 4 网络错误 / 5 其它。
- *
- * 命令: version / register --link / login --link / submit / query / export / quota /
- *       logout / config
  */
-const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-const { execFile } = require('child_process');
 const { ApiClient, BizError, allowInsecureTls } = require('./src/client');
 const { loadConfig, saveConfig, resolveConfig, maskToken, configPaths, DEFAULT_BASE_URL } = require('./src/config');
-const {
-  UsageError, printOk, printFail, exitWithError, pollTask, parsePositiveNumber,
-} = require('./src/output');
+const { UsageError, printOk, printFail, exitWithError, parsePositiveNumber } = require('./src/output');
 
 const CAPABILITY = 'xhs_comments';
-const MIN_BATCH = 1;
-const MAX_BATCH = 50;
-const VERSION = '1.1.0';
-const DOWNLOAD_TIMEOUT_MS = 60000; // 导出文件下载超时 (放宽于 API 15s, 防半开连接永久挂起)
-const CONVERT_TIMEOUT_MS = 180000; // 自动转链子进程总超时 (转链 CLI 内部轮询默认 120s, 放宽兜底)
-// 兄弟 skill: 小红书转链 CLI (链接不合规时自动调用)
-const CONVERT_CLI = path.join(__dirname, '..', 'xhs-convert-url-pro', 'cli.js');
+const VERSION = '2.0.1';
+const DOWNLOAD_TIMEOUT_MS = 60000; // 导出 CSV 下载超时
 
 // ---------------------------------------------------------------- 参数解析
 
-const VALUE_FLAGS = new Set(['file', 'interval', 'timeout', 'token', 'base-url', 'access-token', 'comment-max', 'max', 'out']);
-const MULTI_FLAGS = new Set(['url']);
-const BOOL_FLAGS = new Set(['wait', 'help', 'link', 'check', 'force', 'no-convert', 'version']);
+const VALUE_FLAGS = new Set(['session', 'root', 'url', 'page', 'page-size', 'status',
+  'token', 'base-url', 'access-token', 'out']);
+const BOOL_FLAGS = new Set(['help', 'link', 'check', 'version', 'expand']);
 
 function camel(s) {
   return s.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
@@ -56,13 +52,14 @@ function parseArgs(argv) {
     }
     const name = arg.slice(2);
     if (VALUE_FLAGS.has(name)) {
-      const value = inline !== undefined ? inline : argv[++i];
-      if (value === undefined) throw new UsageError(`缺少参数值: ${arg}`);
-      opts[camel(name)] = value;
-    } else if (MULTI_FLAGS.has(name)) {
-      const value = inline !== undefined ? inline : argv[++i];
-      if (value === undefined) throw new UsageError(`缺少参数值: ${arg}`);
-      (opts[camel(name)] = opts[camel(name)] || []).push(value);
+      let value = inline !== undefined ? inline : argv[i + 1];
+      if (value === undefined || value.startsWith('--')) {
+        // 无值形态: 该 flag 在部分命令里作布尔开关用 (如 step --page 显式采下一页)
+        opts[camel(name)] = true;
+      } else {
+        if (inline === undefined) i++;
+        opts[camel(name)] = value;
+      }
     } else if (BOOL_FLAGS.has(name)) {
       if (inline !== undefined) throw new UsageError(`参数 ${arg} 不接受值`);
       opts[camel(name)] = true;
@@ -74,25 +71,30 @@ function parseArgs(argv) {
   return { cmd, args: positional, opts };
 }
 
-const USAGE = `小红书笔记评论内容采集 CLI (昵称/内容/点赞数/IP属地/子评论数)
+const USAGE = `小红书笔记评论分步采集 CLI v2 (会话制, 按步计费: 每步 1 点数)
 
 用法: node cli.js <命令> [参数]
 
-命令:
+采集流程命令:
+  start --url <笔记链接>            建立采集会话（免费：自动转链补 xsec_token + 采集互动数）
+                                    返回 session_id、笔记标题、评论总数、预估页数
+  step --session <id> --page        采集下一页主评论（10 条+内嵌子评论，扣 1 点）
+  step --session <id> --expand --root <主评论id>
+                                    对指定主评论展开一次子评论（约 5 条，扣 1 点）
+  status --session <id>             查询会话状态/累计采集量/点数余额
+  comments --session <id> [--page N] [--page-size N]
+                                    分页拉取本会话已累计的评论明细（免费）
+  export --session <id> [--out <文件路径>]
+                                    下载会话累计结果 CSV（免费）
+  finish --session <id>             主动结束会话（释放采集节点；空闲 20 分钟也会自动过期）
+  sessions [--status active] [--page N]
+                                    列出自己的会话
+
+账号命令:
   register --link                   生成注册二维码/链接（推荐；注册即送 10 点数）
   register --check --access-token <串>  用户完成注册后确认并保存 token
   login --link                      生成登录二维码/链接（推荐）
   login --check --access-token <串> 用户完成授权后确认并保存 token
-  submit --url <笔记链接> [--url ...] [--file <路径>] [--max N] [--wait] [--interval 秒] [--timeout 秒] [--force] [--no-convert]
-                                    提交评论采集任务（1~50 条；--file 按行读取, 忽略空行与 # 注释；
-                                    --max N 单篇评论采集上限, 0=不限制(封顶500), 不填默认 100；
-                                    --force 跳过 24h 内容去重强制重提）
-                                    链接须带 xsec_token 参数；缺 token / xhslink 短链的链接
-                                    默认自动调用转链 skill xhs-convert-url-pro 转换后再提交
-                                    （转链消耗转链服务点数）；--no-convert 关闭自动转链, 直接报错
-  query <task_id> [--wait]          查询任务状态与结果
-  export <task_id> [--wait] [--out <文件路径>] [--timeout 秒]
-                                    导出任务结果 CSV（保留 7 天；--wait 等待生成, 默认超时 300s）
   quota                             查询点数与个人信息
   logout                            登出当前账号
   config set base-url <url>         设置后端服务地址
@@ -102,11 +104,21 @@ const USAGE = `小红书笔记评论内容采集 CLI (昵称/内容/点赞数/IP
 
 全局参数: --token <token>（临时覆盖）  --base-url <url>（默认 ${DEFAULT_BASE_URL}）`;
 
-// ---------------------------------------------------------------- 各命令
+// ---------------------------------------------------------------- 公共
 
 function requireToken(cfg) {
   if (!cfg.token) throw new BizError(1002, '未登录：缺少 token');
 }
+
+function requireSessionId(opts) {
+  const sid = opts.session;
+  if (!sid || !/^[0-9a-f]{32}$/.test(sid)) {
+    throw new UsageError('需要 --session <32位会话id>（由 start 命令返回）');
+  }
+  return sid;
+}
+
+// ---------------------------------------------------------------- 账号命令 (与 v1 相同)
 
 async function cmdSessionLink(cfg, scene) {
   const client = new ApiClient({ baseUrl: cfg.baseUrl });
@@ -155,265 +167,6 @@ async function cmdSessionCheck(cfg, opts, scene) {
   saveConfig({ base_url: cfg.baseUrl, token: data.token });
   process.stderr.write(`${action}成功，token 已保存到配置文件\n`);
   printOk({ phone: data.phone, quota_balance: data.quota_balance });
-}
-
-function collectUrls(opts) {
-  const urls = [...(opts.url || [])];
-  if (opts.file) {
-    let content;
-    try {
-      content = fs.readFileSync(opts.file, 'utf8');
-    } catch {
-      throw new UsageError(`无法读取文件: ${opts.file}`);
-    }
-    for (const line of content.split(/\r?\n/)) {
-      const s = line.trim();
-      if (!s || s.startsWith('#')) continue;
-      urls.push(s);
-    }
-  }
-  if (urls.length < MIN_BATCH) throw new UsageError('请通过 --url 或 --file 提供至少 1 条笔记链接');
-  if (urls.length > MAX_BATCH) throw new UsageError(`超出单次批量上限（${MAX_BATCH} 条），当前 ${urls.length} 条`);
-  return urls;
-}
-
-// ---------------------------------------------------------------- 链接校验 + 自动转链
-
-/**
- * 提交前本地分类链接（不发请求、不扣费）:
- *  - fatal:       无法自动修复 —— 链接格式不合法 / 非小红书域名 → 直接报错
- *  - convertible: 可自动转链修复 —— 缺 xsec_token 参数 / xhslink 短链
- *                 → 默认自动调用转链 skill (xhs-convert-url-pro) 转换后继续提交
- */
-function classifyNoteUrls(urls) {
-  const fatal = [];
-  const convertible = [];
-  urls.forEach((raw, i) => {
-    const no = i + 1;
-    let u;
-    try {
-      u = new URL(raw);
-    } catch {
-      fatal.push(`第 ${no} 条链接格式不合法（需 http(s):// 开头的完整 URL）: ${raw}`);
-      return;
-    }
-    const host = u.hostname.toLowerCase();
-    if (host === 'xhslink.com' || host.endsWith('.xhslink.com')) {
-      convertible.push({ url: raw, reason: 'xhslink 短链' });
-      return;
-    }
-    if (/(^|\.)xiaohongshu\.com$/.test(host)) {
-      if (!u.searchParams.get('xsec_token')) {
-        convertible.push({ url: raw, reason: '缺少 xsec_token 参数' });
-      }
-      return;
-    }
-    fatal.push(`第 ${no} 条不是小红书笔记链接（域名 ${host}）: ${raw}`);
-  });
-  return { fatal, convertible };
-}
-
-function buildUrlError(problems, suffix) {
-  return '链接校验未通过，本次未提交、未扣费。共 ' + problems.length + ' 条问题:\n' +
-    problems.map((p) => `  - ${p}`).join('\n') + (suffix ? '\n' + suffix : '');
-}
-
-/**
- * 调用兄弟 skill 的转链 CLI (node ../xhs-convert-url-pro/cli.js submit --wait) 转换链接。
- * 返回 { converted: Map<原url, 新url>, failures: [描述] }。
- * execFile + 参数数组, 不经过 shell, 无命令注入面。
- */
-function runConvertCli(targetUrls) {
-  return new Promise((resolve) => {
-    if (!fs.existsSync(CONVERT_CLI)) {
-      resolve({ converted: new Map(), failures: [`未找到转链程序: ${CONVERT_CLI}（请确认 xhs-convert-url-pro skill 与本 skill 同级安装）`] });
-      return;
-    }
-    const args = [CONVERT_CLI, 'submit'];
-    for (const u of targetUrls) args.push('--url', u);
-    args.push('--wait', '--timeout', '150');
-    execFile(process.execPath, args, {
-      timeout: CONVERT_TIMEOUT_MS,
-      maxBuffer: 10 * 1024 * 1024,
-      windowsHide: true,
-    }, (err, stdout, stderr) => {
-      const out = String(stdout || '');
-      // 转链 CLI stdout 规约: 单行 JSON; 退出码非 0 时也尝试解析 (错误也是 JSON)
-      let payload = null;
-      for (const line of out.trim().split(/\r?\n/).reverse()) {
-        const s = line.trim();
-        if (!s) continue;
-        try { payload = JSON.parse(s); } catch { continue; }
-        break;
-      }
-      if (payload && payload.ok === true && payload.data && Array.isArray(payload.data.items)) {
-        const converted = new Map();
-        const failures = [];
-        for (const it of payload.data.items) {
-          if (it.status === 'success' && it.new_url) converted.set(it.url, it.new_url);
-          else failures.push(`${it.url}: ${it.fail_reason || it.status || '转链失败'}`);
-        }
-        resolve({ converted, failures });
-        return;
-      }
-      const msg = payload && payload.message ? `code=${payload.code} ${payload.message}` : (err ? err.message : out.slice(0, 200));
-      resolve({ converted: new Map(), failures: [`转链程序调用失败: ${msg}`] });
-    });
-  });
-}
-
-async function autoConvertAndReplace(urls, convertible) {
-  const targets = [...new Set(convertible.map((c) => c.url))];
-  process.stderr.write(
-    `检测到 ${targets.length} 条链接不合规（缺 xsec_token / xhslink 短链），` +
-    '自动调用转链程序 xhs-convert-url-pro（会产生转链服务点数消耗）...\n');
-  const { converted, failures } = await runConvertCli(targets);
-  for (const f of failures) process.stderr.write(`[warn] 转链未成功: ${f}\n`);
-  const fixed = targets.filter((u) => converted.has(u)).length;
-  if (fixed) {
-    process.stderr.write(`已自动转换 ${fixed}/${targets.length} 条链接，继续提交...\n`);
-  }
-  return urls.map((u) => converted.get(u) || u);
-}
-
-async function cmdSubmit(opts) {
-  const cfg = resolveConfig(opts);
-  requireToken(cfg);
-  const urls = collectUrls(opts);
-  // 链接校验: 缺 xsec_token / 短链默认自动调用转链 skill 修复后继续; --no-convert 关闭; fatal 直接报错
-  const NO_CONVERT_TIP = '说明: 小红书笔记链接必须带 xsec_token 参数；缺 token 的链接请先用「xhs-convert-url-pro」转链 skill 转换；' +
-    'xhslink 短链请先在浏览器打开跳转，取得带 xsec_token 的最终链接后再提交。（去掉 --no-convert 可自动转链）';
-  const first = classifyNoteUrls(urls);
-  if (first.fatal.length) {
-    throw new UsageError(buildUrlError(first.fatal));
-  }
-  let finalUrls = urls;
-  if (first.convertible.length) {
-    if (opts.noConvert) {
-      const problems = first.convertible.map((c) => `${c.reason}: ${c.url}`);
-      throw new UsageError(buildUrlError(problems, NO_CONVERT_TIP));
-    }
-    finalUrls = await autoConvertAndReplace(urls, first.convertible);
-    const second = classifyNoteUrls(finalUrls);
-    if (second.fatal.length || second.convertible.length) {
-      const problems = [
-        ...second.fatal,
-        ...second.convertible.map((c) => `自动转链后仍不合规（${c.reason}）: ${c.url}`),
-      ];
-      throw new UsageError(buildUrlError(problems,
-        '说明: 以上链接经自动转链仍不合规（转链失败明细见 stderr 提示）；可检查链接有效性后重试，或拨打客服电话 18722121663。'));
-    }
-  }
-  // --max 为 --comment-max 的简写; 0=不限制(服务端封顶500), 不传默认 100
-  const cmRaw = opts.commentMax !== undefined ? opts.commentMax : opts.max;
-  // 严格校验 (审计 P2-2): 拒绝 "200abc" 这类 parseInt 会静默截断的输入
-  if (cmRaw !== undefined && !/^\d+$/.test(String(cmRaw))) {
-    throw new UsageError('--max/--comment-max 需为非负整数（0=不限制，封顶 500）');
-  }
-  const commentMax = cmRaw !== undefined ? parseInt(cmRaw, 10) : undefined;
-  const items = finalUrls.map((note_url, i) => {
-    const payload = { note_url };
-    if (commentMax !== undefined) payload.comment_max = commentMax;
-    return { id: i + 1, payload };
-  });
-  // 幂等键按内容派生: 同批内容重试复用同键 (服务端幂等, 不重复扣费);
-  // --force 时混入时间戳生成新键 (服务端同时跳过 24h 去重)
-  const idemSource = finalUrls.join('\n') + (opts.force ? `\n#force:${Date.now()}` : '');
-  const idempotencyKey = crypto.createHash('sha256').update(idemSource).digest('hex').slice(0, 32);
-  process.stderr.write(`提交 ${items.length} 条评论采集任务（幂等键 ${idempotencyKey}${opts.force ? ', force' : ''}）...\n`);
-  const client = new ApiClient({ baseUrl: cfg.baseUrl, token: cfg.token });
-  const data = await client.submitTask(CAPABILITY, items, idempotencyKey, !!opts.force);
-  if (!opts.wait) {
-    printOk(data);
-    return;
-  }
-  process.stderr.write(`任务已创建 task_id=${data.task_id}，等待结果...\n`);
-  const task = await pollTask(client, data.task_id, {
-    intervalSec: parsePositiveNumber(opts.interval, 'interval', 2),
-    timeoutSec: parsePositiveNumber(opts.timeout, 'timeout', 300),
-  });
-  printOk(task);
-}
-
-async function cmdQuery(args, opts) {
-  const taskId = args[0];
-  if (!taskId) throw new UsageError('query 需要 task_id 参数');
-  const cfg = resolveConfig(opts);
-  requireToken(cfg);
-  const client = new ApiClient({ baseUrl: cfg.baseUrl, token: cfg.token });
-  if (!opts.wait) {
-    printOk(await client.getTask(taskId));
-    return;
-  }
-  const task = await pollTask(client, taskId, {
-    intervalSec: parsePositiveNumber(opts.interval, 'interval', 2),
-    timeoutSec: parsePositiveNumber(opts.timeout, 'timeout', 300),
-  });
-  printOk(task);
-}
-
-async function cmdExport(args, opts) {
-  const taskId = args[0];
-  if (!taskId) throw new UsageError('export 需要 task_id 参数');
-  const cfg = resolveConfig(opts);
-  requireToken(cfg);
-  const client = new ApiClient({ baseUrl: cfg.baseUrl, token: cfg.token });
-  const created = await client.createExport(taskId);
-  if (!opts.wait) {
-    printOk(created);
-    return;
-  }
-  process.stderr.write(`导出任务已创建 export_id=${created.export_id}，等待生成...\n`);
-  // 复用 --timeout (默认 300s), 超时报 TIMEOUT 退出码 5 (对齐 pollTask 风格)
-  const timeoutSec = parsePositiveNumber(opts.timeout, 'timeout', 300);
-  const deadline = Date.now() + timeoutSec * 1000;
-  let info;
-  for (;;) {
-    info = await client.getExport(created.export_id);
-    // 终态完备 (审计 P3-3): 只对 pending/running 继续等待, 其余任何状态
-    // (done/failed/expired 及服务端未来新增的 cancelled 等) 都立即跳出, 不空转到超时
-    if (info.status !== 'pending' && info.status !== 'running') break;
-    if (Date.now() + 1000 > deadline) {
-      printFail('TIMEOUT', `等待导出超时（${timeoutSec}s），导出仍为 ${info.status} 状态，可稍后重试 export ${taskId}`);
-      process.exit(5);
-    }
-    await new Promise((r) => setTimeout(r, 1000));
-  }
-  if (info.status !== 'done') {
-    printFail('EXPORT_FAILED', `导出未完成 (status=${info.status}), 请稍后重试`);
-    process.exit(5);
-  }
-  // 下载 CSV (复用 token; 带 AbortController 超时, 审计 P2-1: 原裸 fetch 可永久挂起)
-  const dlCtrl = new AbortController();
-  const dlTimer = setTimeout(() => dlCtrl.abort(), DOWNLOAD_TIMEOUT_MS);
-  let buf;
-  try {
-    const res = await fetch(`${cfg.baseUrl}/api/v1/platform/exports/${encodeURIComponent(info.export_id)}/file`,
-      { headers: { Authorization: `Bearer ${cfg.token}` }, signal: dlCtrl.signal });
-    if (!res.ok) {
-      printFail('EXPORT_FAILED', `下载失败 HTTP ${res.status}`);
-      process.exit(5);
-    }
-    buf = Buffer.from(await res.arrayBuffer());
-  } catch (err) {
-    printFail('EXPORT_FAILED', err && err.name === 'AbortError'
-      ? `下载超时（${DOWNLOAD_TIMEOUT_MS / 1000}s），请检查网络后重试 export ${taskId}`
-      : `下载失败: ${err && err.message ? err.message : err}`);
-    process.exit(5);
-  } finally {
-    clearTimeout(dlTimer);
-  }
-  const out = opts.out || `${taskId}_result.csv`;
-  // --out 路径兜底 (审计 P3-2): 目录不存在自动创建; 覆盖已有文件时在 stderr 提示
-  try {
-    fs.mkdirSync(path.dirname(path.resolve(out)), { recursive: true });
-  } catch { /* 目录已存在 */ }
-  if (fs.existsSync(out)) {
-    process.stderr.write(`[warn] 目标文件已存在，将覆盖: ${out}\n`);
-  }
-  fs.writeFileSync(out, buf);
-  process.stderr.write(`已下载: ${out}\n`);
-  printOk({ export_id: info.export_id, file: out, size: buf.length });
 }
 
 async function cmdQuota(opts) {
@@ -468,6 +221,141 @@ async function cmdConfig(args, opts) {
   throw new UsageError('config 仅支持: config set base-url <url> / config set insecure true|false / config show');
 }
 
+// ---------------------------------------------------------------- 会话命令 (v2)
+
+async function cmdStart(opts) {
+  const url = opts.url;
+  if (!url) throw new UsageError('start 需要 --url <笔记链接>（直链或 xhslink 短链均可，服务端自动转链）');
+  const cfg = resolveConfig(opts);
+  requireToken(cfg);
+  const client = new ApiClient({ baseUrl: cfg.baseUrl, token: cfg.token });
+  process.stderr.write('建立采集会话（转链 + 互动数采集，免费）...\n');
+  const data = await client.createCommentSession(url);
+  // 引导 AI: 必须把评论数/预估页数报给用户确认后再开始计费步进
+  const total = data.metrics && data.metrics.comment_count;
+  process.stderr.write(
+    `会话已建立 session_id=${data.session_id}\n` +
+    `笔记《${data.title || '(无标题)'}》评论总数: ${total || '未知'}, ` +
+    `预估 ${data.estimated_pages == null ? '?' : data.estimated_pages} 页主评论 (每页 10 条 = 1 点)。\n` +
+    '请把评论数和预估页数告知用户, 确认后再执行 step 开始计费采集；' +
+    '每页采完会返回可展开子评论的主评论列表, 由用户决定是否展开 (每次展开 1 点)。\n');
+  printOk(data);
+}
+
+async function cmdStep(opts) {
+  const sessionId = requireSessionId(opts);
+  const cfg = resolveConfig(opts);
+  requireToken(cfg);
+  const client = new ApiClient({ baseUrl: cfg.baseUrl, token: cfg.token });
+  let data;
+  if (opts.expand) {
+    const root = opts.root;
+    if (!root) throw new UsageError('step --expand 需要 --root <主评论id>（取自上一步返回的 expandable 列表）');
+    process.stderr.write(`展开子评论: session=${sessionId} root=${root}（扣 1 点）...\n`);
+    data = await client.stepCommentSession(sessionId, 'expand', root);
+    if (data.no_more) {
+      process.stderr.write('该主评论的子评论已全部展开完（本次未扣费）。\n');
+    } else {
+      process.stderr.write(
+        `本次展开 ${data.comments.length} 条子评论, 该主评论累计 ${data.subs_collected_for_root} 条, ` +
+        `${data.sub_has_more ? '还有更多（继续展开需再扣 1 点, 请先询问用户）' : '已全部展开'}。\n`);
+    }
+  } else {
+    process.stderr.write(`采集下一页主评论: session=${sessionId}（扣 1 点）...\n`);
+    data = await client.stepCommentSession(sessionId, 'page');
+    if (data.no_more) {
+      process.stderr.write('主评论已全部采完（本次未扣费）。\n');
+    } else {
+      const ex = (data.expandable || []);
+      process.stderr.write(
+        `第 ${data.page_no} 页: ${data.comments.length} 条主评论 ` +
+        `(累计 ${data.mains_collected} 主 + ${data.subs_collected} 子), ` +
+        `${data.has_more_main ? '还有下一页' : '已是最后一页'}。\n` +
+        (ex.length
+          ? `本页有 ${ex.length} 条主评论含可展开子评论: ` +
+            ex.map((e) => `${e.root_comment_id}(共${e.sub_comment_count}条,已采${e.subs_collected})`).join(', ') +
+            ' — 是否展开请询问用户（每次展开 1 点）。\n'
+          : '本页主评论均无可展开子评论。\n'));
+    }
+  }
+  printOk(data);
+}
+
+async function cmdStatus(opts) {
+  const sessionId = requireSessionId(opts);
+  const cfg = resolveConfig(opts);
+  requireToken(cfg);
+  const client = new ApiClient({ baseUrl: cfg.baseUrl, token: cfg.token });
+  printOk(await client.getCommentSession(sessionId));
+}
+
+async function cmdComments(opts) {
+  const sessionId = requireSessionId(opts);
+  const cfg = resolveConfig(opts);
+  requireToken(cfg);
+  const client = new ApiClient({ baseUrl: cfg.baseUrl, token: cfg.token });
+  // 无值形态 (--page 不带数字) 视为开关, 用默认页码 (parseArgs 对缺值 value-flag 置 true)
+  const page = opts.page === true ? 1 : parsePositiveNumber(opts.page, 'page', 1);
+  const pageSize = opts.pageSize === true ? 100 : parsePositiveNumber(opts.pageSize, 'page-size', 100);
+  printOk(await client.listSessionComments(sessionId, page, pageSize));
+}
+
+async function cmdFinish(opts) {
+  const sessionId = requireSessionId(opts);
+  const cfg = resolveConfig(opts);
+  requireToken(cfg);
+  const client = new ApiClient({ baseUrl: cfg.baseUrl, token: cfg.token });
+  const data = await client.finishCommentSession(sessionId);
+  process.stderr.write(`会话已结束 (status=${data.status})，采集节点已释放。\n`);
+  printOk(data);
+}
+
+async function cmdListSessions(opts) {
+  const cfg = resolveConfig(opts);
+  requireToken(cfg);
+  const client = new ApiClient({ baseUrl: cfg.baseUrl, token: cfg.token });
+  const page = opts.page === true ? 1 : parsePositiveNumber(opts.page, 'page', 1);
+  printOk(await client.listCommentSessions(page, 20, opts.status || ''));
+}
+
+async function cmdExport(opts) {
+  const sessionId = requireSessionId(opts);
+  const cfg = resolveConfig(opts);
+  requireToken(cfg);
+  const dlCtrl = new AbortController();
+  const dlTimer = setTimeout(() => dlCtrl.abort(), DOWNLOAD_TIMEOUT_MS);
+  let buf;
+  try {
+    const res = await fetch(
+      `${cfg.baseUrl}/api/v1/comments/sessions/${encodeURIComponent(sessionId)}/export`,
+      { headers: { Authorization: `Bearer ${cfg.token}` }, signal: dlCtrl.signal });
+    if (!res.ok) {
+      let msg = `HTTP ${res.status}`;
+      try { msg = (await res.json()).message || msg; } catch { /* 非信封 */ }
+      printFail('EXPORT_FAILED', `导出失败: ${msg}`);
+      process.exit(5);
+    }
+    buf = Buffer.from(await res.arrayBuffer());
+  } catch (err) {
+    printFail('EXPORT_FAILED', err && err.name === 'AbortError'
+      ? `下载超时（${DOWNLOAD_TIMEOUT_MS / 1000}s），请检查网络后重试`
+      : `下载失败: ${err && err.message ? err.message : err}`);
+    process.exit(5);
+  } finally {
+    clearTimeout(dlTimer);
+  }
+  const out = opts.out || `${sessionId}_comments.csv`;
+  try {
+    fs.mkdirSync(path.dirname(path.resolve(out)), { recursive: true });
+  } catch { /* 目录已存在 */ }
+  if (fs.existsSync(out)) {
+    process.stderr.write(`[warn] 目标文件已存在，将覆盖: ${out}\n`);
+  }
+  fs.writeFileSync(out, buf);
+  process.stderr.write(`已下载: ${out}\n`);
+  printOk({ session_id: sessionId, file: out, size: buf.length });
+}
+
 // ---------------------------------------------------------------- 入口
 
 async function main() {
@@ -488,15 +376,22 @@ async function main() {
       if (opts.link) return cmdSessionLink(resolveConfig(opts), 'login');
       if (opts.check) return cmdSessionCheck(resolveConfig(opts), opts, 'login');
       throw new UsageError('login 仅支持 --link / --check (终端登录会被 2003 拒绝)');
-    case 'submit': return cmdSubmit(opts);
-    case 'query': return cmdQuery(args, opts);
-    case 'export': return cmdExport(args, opts);
+    case 'start': return cmdStart(opts);
+    case 'step': return cmdStep(opts);
+    case 'status': return cmdStatus(opts);
+    case 'comments': return cmdComments(opts);
+    case 'finish': return cmdFinish(opts);
+    case 'sessions': return cmdListSessions(opts);
+    case 'export': return cmdExport(opts);
     case 'quota': return cmdQuota(opts);
     case 'logout': return cmdLogout(opts);
     case 'config': return cmdConfig(args, opts);
+    case 'submit':
+    case 'query':
+      throw new UsageError(
+        'v2.0 起评论采集改为分步会话制: submit/query 已移除, 请使用 start → step → finish 流程 (--help 查看)');
     default: throw new UsageError(`未知命令: ${cmd}`);
   }
 }
 
-// 接线 USAGE (审计 G1): 参数错误时在 stderr 输出帮助文案, 否则 USAGE 是死代码且用户看不到帮助
 main().catch((e) => exitWithError(e, { usage: USAGE }));

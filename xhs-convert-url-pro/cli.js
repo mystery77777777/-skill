@@ -18,7 +18,7 @@ const {
 } = require('./src/output');
 
 const SKILL_NAME = 'xhs-convert-url-pro';
-const VERSION = '2.0.0';
+const VERSION = '2.0.1';
 const MIN_BATCH = 1;
 const MAX_BATCH = 50;
 

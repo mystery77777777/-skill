@@ -2,7 +2,7 @@
 /**
  * _shared/client.js — 平台 /api/v1 API 客户端 (对齐转链 skill 同名模块)。
  *
- * - 内置全局 fetch, 单次请求 15s 超时 (AbortController)
+ * - 内置全局 fetch, 单次请求默认 15s 超时 (AbortController), opts.timeoutMs 可覆盖
  * - 统一信封 {"code","message","data"}: code !== 0 抛 BizError
  * - HTTP 层失败 (连接拒绝/超时/非信封响应) 抛 NetworkError
  */
@@ -42,9 +42,9 @@ class ApiClient {
     this.token = token || '';
   }
 
-  /** 发起 API 请求, 成功返回信封 data。 */
+  /** 发起 API 请求, 成功返回信封 data。opts.timeoutMs 可覆盖默认 15s 超时。 */
   async request(method, apiPath, opts = {}) {
-    const { body, headers = {} } = opts;
+    const { body, headers = {}, timeoutMs = REQUEST_TIMEOUT_MS } = opts;
     // 明文 http + 携带 token 时提示一次 (每进程仅一次), 不打断请求
     if (!_httpWarned && this.token && this.baseUrl.startsWith('http://')) {
       _httpWarned = true;
@@ -59,7 +59,7 @@ class ApiClient {
       process.stderr.write(`[warn] 目标 ${this.baseUrl} 的 HTTPS 证书校验已关闭（insecure=true），存在中间人风险，请确认网络环境\n`);
     }
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), REQUEST_TIMEOUT_MS);
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
     let res;
     let payload = null;
     try {
@@ -81,7 +81,7 @@ class ApiClient {
       }
     } catch (err) {
       if (err.name === 'AbortError') {
-        throw new NetworkError(`请求超时（${REQUEST_TIMEOUT_MS / 1000}s）: ${this.baseUrl}`);
+        throw new NetworkError(`请求超时（${Math.round(timeoutMs / 1000)}s）: ${this.baseUrl}`);
       }
       throw new NetworkError(`无法连接后端服务 ${this.baseUrl}: ${err.message}`);
     } finally {
@@ -129,6 +129,89 @@ class ApiClient {
   }
   getExport(exportId) {
     return this.request('GET', `/platform/exports/${encodeURIComponent(exportId)}`);
+  }
+
+  // ---- comments session (xhs_comments v2 分步会话采集, 2026-10-10) ----
+  createCommentSession(url) {
+    // 建会话内含转链 + 互动数采集 (服务端串行 HTTP), 放宽超时
+    return this.request('POST', '/comments/sessions', { body: { url }, timeoutMs: 90000 });
+  }
+  getCommentSession(sessionId) {
+    return this.request('GET', `/comments/sessions/${encodeURIComponent(sessionId)}`);
+  }
+  listCommentSessions(page = 1, pageSize = 20, status = '') {
+    const q = `?page=${page}&page_size=${pageSize}` +
+      (status ? `&status=${encodeURIComponent(status)}` : '');
+    return this.request('GET', '/comments/sessions' + q);
+  }
+  stepCommentSession(sessionId, type, rootCommentId = '') {
+    // 步进服务端最长执行 ~180s (滚动一页/展开一次 + 节点回传), 放宽超时
+    return this.request('POST', `/comments/sessions/${encodeURIComponent(sessionId)}/step`, {
+      body: { type, root_comment_id: rootCommentId }, timeoutMs: 200000,
+    });
+  }
+  finishCommentSession(sessionId) {
+    return this.request('POST', `/comments/sessions/${encodeURIComponent(sessionId)}/finish`);
+  }
+  listSessionComments(sessionId, page = 1, pageSize = 100) {
+    return this.request('GET',
+      `/comments/sessions/${encodeURIComponent(sessionId)}/comments?page=${page}&page_size=${pageSize}`);
+  }
+
+  // ---- dy comments session (dy_comments 分步会话采集, 2026-10-15) ----
+  // 与 xhs comments session 平行, 路径前缀 /dy/comments; 步进参数为 root_cid
+  createDyCommentSession(url) {
+    // 建会话内含节点免费 probe 探测 (服务端默认 60s 超时), 放宽超时
+    return this.request('POST', '/dy/comments/sessions', { body: { url }, timeoutMs: 90000 });
+  }
+  getDyCommentSession(sessionId) {
+    return this.request('GET', `/dy/comments/sessions/${encodeURIComponent(sessionId)}`);
+  }
+  listDyCommentSessions(page = 1, pageSize = 20, status = '') {
+    const q = `?page=${page}&page_size=${pageSize}` +
+      (status ? `&status=${encodeURIComponent(status)}` : '');
+    return this.request('GET', '/dy/comments/sessions' + q);
+  }
+  stepDyCommentSession(sessionId, type, rootCid = '') {
+    // 步进服务端最长执行 ~180s (滚动一页/展开一次 + 节点回传), 放宽超时
+    return this.request('POST', `/dy/comments/sessions/${encodeURIComponent(sessionId)}/step`, {
+      body: { type, root_cid: rootCid }, timeoutMs: 200000,
+    });
+  }
+  finishDyCommentSession(sessionId) {
+    return this.request('POST', `/dy/comments/sessions/${encodeURIComponent(sessionId)}/finish`);
+  }
+  listDySessionComments(sessionId, page = 1, pageSize = 100) {
+    return this.request('GET',
+      `/dy/comments/sessions/${encodeURIComponent(sessionId)}/comments?page=${page}&page_size=${pageSize}`);
+  }
+
+  // ---- ks comments session (ks_comments 分步会话采集, 2026-10-16) ----
+  // 与 dy comments session 平行, 路径前缀 /ks/comments; 步进参数为 root_cid
+  createKsCommentSession(url) {
+    // 建会话内含节点免费 probe 探测 (服务端默认 60s 超时), 放宽超时
+    return this.request('POST', '/ks/comments/sessions', { body: { url }, timeoutMs: 90000 });
+  }
+  getKsCommentSession(sessionId) {
+    return this.request('GET', `/ks/comments/sessions/${encodeURIComponent(sessionId)}`);
+  }
+  listKsCommentSessions(page = 1, pageSize = 20, status = '') {
+    const q = `?page=${page}&page_size=${pageSize}` +
+      (status ? `&status=${encodeURIComponent(status)}` : '');
+    return this.request('GET', '/ks/comments/sessions' + q);
+  }
+  stepKsCommentSession(sessionId, type, rootCid = '') {
+    // 步进服务端最长执行 ~180s (滚动一页/展开一次 + 节点回传), 放宽超时
+    return this.request('POST', `/ks/comments/sessions/${encodeURIComponent(sessionId)}/step`, {
+      body: { type, root_cid: rootCid }, timeoutMs: 200000,
+    });
+  }
+  finishKsCommentSession(sessionId) {
+    return this.request('POST', `/ks/comments/sessions/${encodeURIComponent(sessionId)}/finish`);
+  }
+  listKsSessionComments(sessionId, page = 1, pageSize = 100) {
+    return this.request('GET',
+      `/ks/comments/sessions/${encodeURIComponent(sessionId)}/comments?page=${page}&page_size=${pageSize}`);
   }
 }
 
