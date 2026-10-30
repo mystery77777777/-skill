@@ -2,7 +2,7 @@
 
 A bilingual collection of AI-agent skills and zero-dependency Node.js CLIs for social-media data collection, link conversion, and CSV export.
 
-一套面向 AI Agent 的社媒数据采集 Skill 与零依赖 Node.js CLI，支持多平台内容采集、链接转换和 CSV 导出。
+一套面向 AI Agent 的社媒数据采集 Skill 与零依赖 Node.js CLI，支持多平台内容采集、链接转换和 CSV 导出。无需账号，采集端的困难全由后台解决。
 
 ## 中文说明
 
