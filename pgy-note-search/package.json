@@ -1,0 +1,10 @@
+{
+  "name": "pgy-note-search",
+  "version": "1.0.1",
+  "private": true,
+  "description": "蒲公英热门商业笔记搜索采集 Skill CLI (关键词+页数, 一页 34 条 = 1 点数, 按实采结算退差)",
+  "main": "cli.js",
+  "engines": {
+    "node": ">=18"
+  }
+}

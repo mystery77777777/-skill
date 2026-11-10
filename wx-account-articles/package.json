@@ -1,0 +1,10 @@
+{
+  "name": "wx-account-articles",
+  "version": "1.0.0",
+  "private": true,
+  "description": "公众号历史发文采集 Skill CLI (能力 wx_account_articles, 2 点/页)",
+  "main": "cli.js",
+  "engines": {
+    "node": ">=18"
+  }
+}

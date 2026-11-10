@@ -1,0 +1,10 @@
+{
+  "name": "dcd-pinglun",
+  "version": "1.0.0",
+  "private": true,
+  "description": "懂车帝评论采集 Skill CLI (会话制, 20 条主评论/页含楼中楼, 每页 1 点数)",
+  "main": "cli.js",
+  "engines": {
+    "node": ">=18"
+  }
+}

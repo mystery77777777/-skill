@@ -1,0 +1,10 @@
+{
+  "name": "pgy-blogger-detail",
+  "version": "1.0.1",
+  "private": true,
+  "description": "蒲公英博主详情采集 Skill CLI (博主链接/24位ID, 六组接口拍平宽表, 3 点数/位)",
+  "main": "cli.js",
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "xhs-search",
+  "version": "2.0.1",
+  "private": true,
+  "description": "小红书搜索笔记采集 Skill CLI (关键词搜索, 按接口返回批次计费: 20条=1点, 按实采结算退差)",
+  "main": "cli.js",
+  "engines": {
+    "node": ">=18"
+  }
+}

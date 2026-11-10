@@ -1,0 +1,10 @@
+{
+  "name": "zh-zhuanlan",
+  "version": "1.0.0",
+  "private": true,
+  "description": "知乎专栏文章列表采集 Skill CLI",
+  "main": "cli.js",
+  "engines": {
+    "node": ">=18"
+  }
+}

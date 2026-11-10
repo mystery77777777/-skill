@@ -1,0 +1,10 @@
+{
+  "name": "wx-article-read",
+  "version": "1.0.0",
+  "private": true,
+  "description": "公众号文章互动数采集 Skill CLI (能力 wx_article_read, 1 点/条)",
+  "main": "cli.js",
+  "engines": {
+    "node": ">=18"
+  }
+}

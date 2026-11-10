@@ -1,0 +1,10 @@
+{
+  "name": "ah-detail",
+  "version": "1.0.0",
+  "private": true,
+  "description": "汽车之家内容详情采集 Skill CLI (论坛帖子/资讯/车家号, 标题+作者+正文+图片, 1 条链接 = 1 点数)",
+  "main": "cli.js",
+  "engines": {
+    "node": ">=18"
+  }
+}

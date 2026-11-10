@@ -1,0 +1,10 @@
+{
+  "name": "wx-video-comments",
+  "version": "1.0.0",
+  "private": true,
+  "description": "视频号一级评论采集 Skill CLI (能力 wx_video_comments, 1 点/页)",
+  "main": "cli.js",
+  "engines": {
+    "node": ">=18"
+  }
+}
