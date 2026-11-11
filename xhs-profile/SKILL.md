@@ -8,6 +8,12 @@ description: 小红书博主主页笔记采集工具（博主主页链接）。�
 
 # 小红书博主主页笔记采集 Skill（xhs-profile）
 
+## AI 调用来源参数（必填）
+
+所有会访问后端 API 的命令必须携带 `--skill-name xhs-profile` 和 `--ai-entry <AI工具标识>`（例如 `claude-code`、`codex`、`workbuddy`）。IP 无需传递，由服务端自动获取。首次缺参会告警放行，第二次起拒绝。
+
+示例：`node cli.js quota --skill-name xhs-profile --ai-entry claude-code`。
+
 封装「小红书能力平台」（FastAPI，`/api/v1`）的 CLI，供 AI agent 调用。输入**博主主页链接**，平台调度内网浏览器节点以真人滚动方式打开博主主页，SSR 首屏解析 + 拦截官方列表接口响应，采集该博主的笔记列表。
 
 - **能采什么**：博主主页的笔记明细（`title` 标题、`note_type` 视频/图文、`liked_count` 点赞数、`publish_time` 发布时间、`cover_url` 封面图、`note_url` 带 xsec_token 的笔记直链、`sticky` 是否置顶）。
@@ -16,6 +22,24 @@ description: 小红书博主主页笔记采集工具（博主主页链接）。�
 - **限制**：每任务 1 个博主；整单 1~10 页（每页 30 条）；会话模式不限页数、一页一页采；节点滚动每页约 5-10 秒。
 - 采集由**平台调度内网浏览器节点**完成（节点登录态在浏览器端人工维护，平台不持有账号）。
 - 客户端是零依赖 CLI（Node ≥ 18，无需 `npm install`），全部采集逻辑在后端完成。
+
+## 点数不足怎么办（自动扫码充值）
+
+跑命令时如果点数不够，CLI **不会直接报错退出**，而是自己建一张充值单、把二维码打在终端里：
+
+```
+点数不足，已自动创建充值单 RO2611051712281481f36de19
+金额 10.00 元 → 100 点（支付宝）
+<二维码色块>
+[pay] 已支付
+已到账：+100 点，继续执行原命令
+```
+
+- **在终端里跑**：手机支付宝/微信对着终端扫码 → 付完点数自动到账 → 原命令自动重跑，不用手动再来一遍。
+- **AI agent / 非交互环境**（管道、重定向）：CLI 不阻塞等待，而是返回订单号和充值页地址 `{服务地址}/recharge.html`。把链接交给用户，他在网页扫码付款，付完重跑原命令即可（点数会自动到账）。
+- **主动充值**：`node cli.js pay --yuan 50 --skill-name xhs-profile --ai-entry <ai-entry>`（不传 `--yuan` 默认 10 元；可加 `--channel alipay` 或 `--channel wechat`）。
+- **不想自动充值**：设环境变量 `XHS_NO_AUTO_PAY=1`，则恢复旧行为（只提示点数不足）。
+- 换算：**1 元 = 10 点**，注册送 10 点。
 
 ## 客服支持
 
@@ -39,20 +63,20 @@ description: 小红书博主主页笔记采集工具（博主主页链接）。�
 
 ### 整单模式（用户明确要采 N 页 / 一次性采完）
 
-1. **查余额**：`node cli.js quota` 确认点数充足（余额 < 预扣点数会被 3001 拒绝）。
+1. **查余额**：`node cli.js quota --skill-name xhs-profile --ai-entry <ai-entry>` 确认点数充足（余额 < 预扣点数会被 3001 拒绝）。
 2. **报价确认（必须）**：向用户明确以下信息并**等用户确认后**再提交：
    - 博主主页链接、采集页数（1~10 页，每页 30 条）
    - 预估点数：`页数`（例：3 页 → 3 点）
    - 计费规则：**预扣 页数，按实采 ceil(条数/30) 结算退差，零头按一页计，零结果/失败/博主被封全退**
    - **未经用户确认不要执行 collect。**
-3. **提交并等待**：`node cli.js collect --url "<主页链接>" --pages <N> --wait --timeout 600`。节点滚动每页约 5-10 秒，不要中途重试。
+3. **提交并等待**：`node cli.js collect --url "<主页链接>" --pages <N> --wait --timeout 600 --skill-name xhs-profile --ai-entry <ai-entry>`。节点滚动每页约 5-10 秒，不要中途重试。
 4. **如实汇报结算**：结果里的 `collected_count`（实采条数）、`settle_charged`（实收点数）、`refunded_diff`（退还差值）必须如实告知用户。
-5. **需要文件时导出**：`node cli.js export <task_id> --wait --out 博主笔记.csv`，把 CSV 路径交给用户。
+5. **需要文件时导出**：`node cli.js export <task_id> --wait --out 博主笔记.csv --skill-name xhs-profile --ai-entry <ai-entry>`，把 CSV 路径交给用户。
 
 ### 会话模式（用户想一页一页看结果再决定要不要继续）
 
-1. **建会话（免费）**：`node cli.js session start --url "<主页链接>"` → 拿到 `session_id`。
-2. **逐页步进**：每次 `node cli.js session step <session_id>` 采一页（30 条 = 1 点），**步进前向用户确认扣 1 点**；返回本页笔记 + `has_more` + 博主昵称/笔记总数（首步）+ 余额。
+1. **建会话（免费）**：`node cli.js session start --url "<主页链接>" --skill-name xhs-profile --ai-entry <ai-entry>` → 拿到 `session_id`。
+2. **逐页步进**：每次 `node cli.js session step <session_id> --skill-name xhs-profile --ai-entry <ai-entry>` 采一页（30 条 = 1 点），**步进前向用户确认扣 1 点**；返回本页笔记 + `has_more` + 博主昵称/笔记总数（首步）+ 余额。
 3. **到底自动免费**：`no_more: true` 表示已采完，**不扣费**；引导用户 `session finish` 结束会话释放节点。
 4. **随时拉取/导出**：`session notes <session_id>` 免费拉已采笔记；`session export <session_id> --out 文件.csv` 导出累计结果。
 5. **注意**：会话空闲 20 分钟自动过期（节点释放），之后需重新建会话（已采数据仍在，`session notes/export` 仍可拉取）。
@@ -95,8 +119,8 @@ node cli.js version
 **方式一：扫码/链接注册（唯一方式，用户在手机上完成）**
 
 ```bash
-node cli.js register --link        # 生成注册二维码/链接
-node cli.js register --check --access-token "<上一步下发的串>"   # 用户完成后确认并保存 token
+node cli.js register --link --skill-name xhs-profile --ai-entry <ai-entry>        # 生成注册二维码/链接
+node cli.js register --check --access-token "<上一步下发的串>" --skill-name xhs-profile --ai-entry <ai-entry>   # 用户完成后确认并保存 token
 ```
 
 `register --link` 的 stdout 返回 `qr_url` / `register_url` / `access_token`。**agent 必须把注册引导原样发给用户**（stderr 里也给出了同样话术，可直接复制）：
@@ -120,8 +144,8 @@ access_token（注册后校验用）：<access_token>
 ### login — 登录
 
 ```bash
-node cli.js login --link
-node cli.js login --check --access-token "<上一步下发的串>"
+node cli.js login --link --skill-name xhs-profile --ai-entry <ai-entry>
+node cli.js login --check --access-token "<上一步下发的串>" --skill-name xhs-profile --ai-entry <ai-entry>
 ```
 
 引导话术同 register（把"注册"换成"登录"）。成功后 token 自动保存。
@@ -129,7 +153,7 @@ node cli.js login --check --access-token "<上一步下发的串>"
 ### quota — 查询点数
 
 ```bash
-node cli.js quota
+node cli.js quota --skill-name xhs-profile --ai-entry <ai-entry>
 ```
 
 ```json
@@ -139,10 +163,10 @@ node cli.js quota
 ### collect — 提交整单主页采集任务
 
 ```bash
-node cli.js collect --url "https://www.xiaohongshu.com/user/profile/5b4c369611be104d815b1ba9"                 # 默认 1 页 (30 条)
-node cli.js collect --url "<主页链接>" --pages 3                    # 3 页 (约 90 条, 预扣 3 点)
-node cli.js collect --url "<主页链接>" --pages 3 --wait             # 提交并等待结果
-node cli.js collect --url "<主页链接>" --pages 3 --wait --timeout 600 --force
+node cli.js collect --url "https://www.xiaohongshu.com/user/profile/5b4c369611be104d815b1ba9" --skill-name xhs-profile --ai-entry <ai-entry>                 # 默认 1 页 (30 条)
+node cli.js collect --url "<主页链接>" --pages 3 --skill-name xhs-profile --ai-entry <ai-entry>                    # 3 页 (约 90 条, 预扣 3 点)
+node cli.js collect --url "<主页链接>" --pages 3 --wait --skill-name xhs-profile --ai-entry <ai-entry>             # 提交并等待结果
+node cli.js collect --url "<主页链接>" --pages 3 --wait --timeout 600 --force --skill-name xhs-profile --ai-entry <ai-entry>
 ```
 
 - `--url`：博主主页链接（`/user/profile/<id>` 直链或 xhslink 短链；填笔记链接会被拒绝）。
@@ -173,14 +197,14 @@ node cli.js collect --url "<主页链接>" --pages 3 --wait --timeout 600 --forc
 ### query — 查询任务状态与结果
 
 ```bash
-node cli.js query <task_id>            # 单次查询
-node cli.js query <task_id> --wait     # 轮询到终态 (默认 600s 超时)
+node cli.js query <task_id> --skill-name xhs-profile --ai-entry <ai-entry>            # 单次查询
+node cli.js query <task_id> --wait --skill-name xhs-profile --ai-entry <ai-entry>     # 轮询到终态 (默认 600s 超时)
 ```
 
 ### export — 导出整单结果 CSV
 
 ```bash
-node cli.js export <task_id> --wait --out 博主笔记.csv
+node cli.js export <task_id> --wait --out 博主笔记.csv --skill-name xhs-profile --ai-entry <ai-entry>
 ```
 
 下载任务结果 CSV（BOM 头，Excel 直开不乱码）：任务汇总（主页链接/博主/状态/请求页数/实采数/实收点数/退差点数）+ 笔记明细（标题/类型/点赞数/发布时间/置顶/封面/笔记直链）。导出文件保留 7 天。
@@ -188,13 +212,13 @@ node cli.js export <task_id> --wait --out 博主笔记.csv
 ### session — 会话模式（一页一页采）
 
 ```bash
-node cli.js session start --url "<主页链接>"     # 建会话 (免费), 返回 session_id
-node cli.js session step <session_id>            # 步进一页 (30 条 = 1 点; no_more 不扣费)
-node cli.js session status <session_id>          # 会话状态/累计统计/余额
-node cli.js session list [--status active]       # 会话列表
-node cli.js session notes <session_id> [--page 2]  # 已采笔记分页拉取 (免费)
-node cli.js session export <session_id> --out 博主笔记.csv  # 累计结果 CSV (免费)
-node cli.js session finish <session_id>          # 主动结束 (释放节点)
+node cli.js session start --url "<主页链接>" --skill-name xhs-profile --ai-entry <ai-entry>     # 建会话 (免费), 返回 session_id
+node cli.js session step <session_id> --skill-name xhs-profile --ai-entry <ai-entry>            # 步进一页 (30 条 = 1 点; no_more 不扣费)
+node cli.js session status <session_id> --skill-name xhs-profile --ai-entry <ai-entry>          # 会话状态/累计统计/余额
+node cli.js session list [--status active] --skill-name xhs-profile --ai-entry <ai-entry>       # 会话列表
+node cli.js session notes <session_id> [--page 2] --skill-name xhs-profile --ai-entry <ai-entry>  # 已采笔记分页拉取 (免费)
+node cli.js session export <session_id> --out 博主笔记.csv --skill-name xhs-profile --ai-entry <ai-entry>  # 累计结果 CSV (免费)
+node cli.js session finish <session_id> --skill-name xhs-profile --ai-entry <ai-entry>          # 主动结束 (释放节点)
 ```
 
 `session step` 输出示例：
@@ -214,7 +238,7 @@ node cli.js session finish <session_id>          # 主动结束 (释放节点)
 ### logout — 登出（切换账号）
 
 ```bash
-node cli.js logout
+node cli.js logout --skill-name xhs-profile --ai-entry <ai-entry>
 ```
 
 ### config — 配置管理
@@ -226,7 +250,7 @@ node cli.js config show        # token 脱敏显示
 
 ## 典型工作流（agent 照此执行）
 
-1. 用户说「帮我采集这个博主的主页笔记」→ `node cli.js quota` 确认余额。
+1. 用户说「帮我采集这个博主的主页笔记」→ `node cli.js quota --skill-name xhs-profile --ai-entry <ai-entry>` 确认余额。
 2. 和用户确认模式：
    - 知道要采多少 → 整单：确认页数，算预估点数 `页数`，**明确告知计费规则（预扣/结算退差/零头按一页计/零结果失败被封全退）并等确认** → `collect --url <链接> --pages N --wait`。
    - 想边采边看 → 会话：`session start`（免费）→ 逐次 `session step`（每步前确认扣 1 点）→ `no_more` 或用户说停 → `session finish`。

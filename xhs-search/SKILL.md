@@ -2,11 +2,17 @@
 name: xhs-search
 slug: xhs-keyword-search
 displayName: 小红书关键词搜索采集
-version: 2.0.1
-description: 小红书搜索笔记采集工具（关键词搜索）。当用户需要按关键词搜索小红书笔记并采集结果列表——标题、点赞/收藏/评论/分享数、作者昵称、发布时间、封面图、笔记直链，批量获取竞品笔记、选题调研、KOL 初筛、导出搜索结果 CSV（Excel 直开），或提到"小红书搜索/搜笔记/关键词采集/搜索结果导出/选题/竞品笔记列表"时使用本 skill。适合内容选题调研、竞品监测、达人初筛、品类笔记盘点等场景。**一次接口返回（20 条主帖）= 1 点数；预扣按请求量、结算按实采量退差；零结果或失败全额返还（注册送 10 点）。**
+version: 2.1.0
+description: 小红书搜索笔记采集工具（关键词搜索）。当用户需要按关键词搜索小红书笔记并采集结果列表——标题、点赞/收藏/评论/分享数、作者昵称、发布时间、封面图、笔记直链，批量获取竞品笔记、选题调研、KOL 初筛、导出搜索结果 CSV（Excel 直开），或提到"小红书搜索/搜笔记/关键词采集/搜索结果导出/选题/竞品笔记列表"时使用本 skill。支持排序、笔记类型、发布时间、搜索范围、位置距离 5 组筛选。适合内容选题调研、竞品监测、达人初筛、品类笔记盘点等场景。**一次接口返回（20 条主帖）= 1 点数；预扣按请求量、结算按实采量退差；零结果或失败全额返还（注册送 10 点）。**
 ---
 
 # 小红书搜索笔记采集 Skill（xhs-search）
+
+## AI 调用来源参数（必填）
+
+所有会访问后端 API 的命令必须携带 `--skill-name xhs-search` 和 `--ai-entry <AI工具标识>`（例如 `claude-code`、`codex`、`workbuddy`）。IP 无需传递，由服务端自动获取。首次缺参会告警放行，第二次起拒绝。
+
+示例：`node cli.js quota --skill-name xhs-search --ai-entry claude-code`。
 
 封装「小红书能力平台」（FastAPI，`/api/v1`）的 CLI，供 AI agent 调用。输入**关键词 + 条数**，平台调度内网浏览器节点以真人滚动方式打开小红书搜索页，拦截官方搜索接口响应，采集笔记列表。
 
@@ -16,6 +22,24 @@ description: 小红书搜索笔记采集工具（关键词搜索）。当用户�
 - **限制**：单任务 1 个关键词、1~500 条；节点滚动约 3-5 分钟（500 条约 5 分钟）。
 - 采集由**平台调度内网浏览器节点**完成（节点登录态在浏览器端人工维护，平台不持有账号）。
 - 客户端是零依赖 CLI（Node ≥ 18，无需 `npm install`），全部采集逻辑在后端完成。
+
+## 点数不足怎么办（自动扫码充值）
+
+跑命令时如果点数不够，CLI **不会直接报错退出**，而是自己建一张充值单、把二维码打在终端里：
+
+```
+点数不足，已自动创建充值单 RO2611051712281481f36de19
+金额 10.00 元 → 100 点（支付宝）
+<二维码色块>
+[pay] 已支付
+已到账：+100 点，继续执行原命令
+```
+
+- **在终端里跑**：手机支付宝/微信对着终端扫码 → 付完点数自动到账 → 原命令自动重跑，不用手动再来一遍。
+- **AI agent / 非交互环境**（管道、重定向）：CLI 不阻塞等待，而是返回订单号和充值页地址 `{服务地址}/recharge.html`。把链接交给用户，他在网页扫码付款，付完重跑原命令即可（点数会自动到账）。
+- **主动充值**：`node cli.js pay --yuan 50 --skill-name xhs-search --ai-entry <ai-entry>`（不传 `--yuan` 默认 10 元；可加 `--channel alipay` 或 `--channel wechat`）。
+- **不想自动充值**：设环境变量 `XHS_NO_AUTO_PAY=1`，则恢复旧行为（只提示点数不足）。
+- 换算：**1 元 = 10 点**，注册送 10 点。
 
 ## 客服支持
 
@@ -36,17 +60,37 @@ description: 小红书搜索笔记采集工具（关键词搜索）。当用户�
 
 本 skill 是**确认制一次性任务**，不是跑完就完。请按下面的流程驱动对话：
 
-1. **查余额**：`node cli.js quota` 确认点数充足（余额 < 预扣点数会被 3001 拒绝）。
+1. **查余额**：`node cli.js quota --skill-name xhs-search --ai-entry <ai-entry>` 确认点数充足（余额 < 预扣点数会被 3001 拒绝）。
 2. **报价确认（必须）**：向用户明确以下信息并**等用户确认后**再提交：
-   - 搜索关键词、采集数量（1~500）、排序（默认综合）、笔记类型（默认全部）
+   - 搜索关键词、采集数量（1~500）
+   - **是否筛选？** 主动询问用户，可多选，全部默认「不限」：
+     - 排序：综合 / 最新 / 最多点赞 / 最多评论 / 最多收藏（默认综合）
+     - 笔记类型：不限 / 视频 / 图文（默认不限）
+     - 发布时间：不限 / 一天内 / 一周内 / 半年内（默认不限）
+     - 搜索范围：不限 / 已看过 / 未看过 / 已关注（默认不限）
+     - 位置距离：不限 / 同城 / 附近（默认不限）
    - 预估点数：`ceil(数量/20)`（例：50 条 → 3 点；120 条 → 6 点）
    - 计费规则：**预扣 ceil(N/20)，按实采 ceil(M/20) 结算退差，零头按一次计，零结果或失败全退**
    - **未经用户确认不要执行 submit。**
-3. **提交并等待**：`node cli.js submit --keyword "<词>" --count <N> --wait --timeout 600`。节点滚动约 3-5 分钟属正常，不要中途重试。
+3. **提交并等待**：把用户选择的筛选条件转成参数一起提交，例如
+   `node cli.js submit --keyword "<词>" --count <N> --sort <S> --note-type <T> --note-time <D> --note-range <R> --pos-distance <P> --wait --timeout 600 --skill-name xhs-search --ai-entry <ai-entry>`。
+   节点滚动约 3-5 分钟属正常，不要中途重试。
 4. **如实汇报结算**：结果里的 `collected_count`（实采条数）、`settle_charged`（实收点数）、`refunded_diff`（退还差值）必须如实告知用户（例：「实采 45 条，实收 3 点，退 0 点」/「请求 120 条实采 85 条，实收 5 点，退 1 点」）。
-5. **需要文件时导出**：`node cli.js export <task_id> --wait --out 搜索结果.csv`，把 CSV 路径交给用户。
+5. **需要文件时导出**：`node cli.js export <task_id> --wait --out 搜索结果.csv --skill-name xhs-search --ai-entry <ai-entry>`，把 CSV 路径交给用户。
 
-**排序说明**：`--sort` 支持 general（综合）/ time_descending（最新）/ popularity_descending（最热）/ comment_descending（最多评论）/ collect_descending（最多收藏）；`--note-type` 0=全部 / 1=视频 / 2=图文。
+**筛选参数说明**：
+- `--sort`：general（综合）/ time_descending（最新）/ popularity_descending（最多点赞）/ comment_descending（最多评论）/ collect_descending（最多收藏），默认 general。
+- `--note-type`：0=不限 / 1=视频 / 2=图文，默认 0。
+- `--note-time`：0=不限 / 1=一天内 / 7=一周内 / 180=半年内，默认 0。
+- `--note-range`：0=不限 / 1=已看过 / 2=未看过 / 3=已关注，默认 0。
+- `--pos-distance`：0=不限 / 1=同城 / 2=附近，默认 0。
+
+**筛选失效降级（必须如实告知）**：节点页面的筛选按钮可能因页面改版或定位权限失效。此时任务**不会失败**，会降级为不筛选继续采集，结果里：
+- `filter_fallback=true`：有筛选条件未生效；
+- `filter_errors=["发布时间:点击后未生效", ...]`：具体哪组失败；
+- `filters_effective`：实际生效的筛选条件。
+
+出现降级时必须明确告诉用户「部分筛选未生效，本次结果为不筛选数据」，不要把未筛选结果当成筛选结果汇报；节点机器会语音播报「小红书筛选按钮失效了」。
 
 ## 前置条件
 
@@ -76,7 +120,7 @@ node cli.js version
 ```
 
 ```json
-{"ok":true,"data":{"name":"xhs-search","version":"2.0.1","capability":"xhs_search"}}
+{"ok":true,"data":{"name":"xhs-search","version":"2.1.0","capability":"xhs_search"}}
 ```
 
 ### register — 注册（注册即送 10 点数）
@@ -84,8 +128,8 @@ node cli.js version
 **方式一：扫码/链接注册（唯一方式，用户在手机上完成）**
 
 ```bash
-node cli.js register --link        # 生成注册二维码/链接
-node cli.js register --check --access-token "<上一步下发的串>"   # 用户完成后确认并保存 token
+node cli.js register --link --skill-name xhs-search --ai-entry <ai-entry>        # 生成注册二维码/链接
+node cli.js register --check --access-token "<上一步下发的串>" --skill-name xhs-search --ai-entry <ai-entry>   # 用户完成后确认并保存 token
 ```
 
 `register --link` 的 stdout 返回 `qr_url` / `register_url` / `access_token`。**agent 必须把注册引导原样发给用户**（stderr 里也给出了同样话术，可直接复制）：
@@ -109,8 +153,8 @@ access_token（注册后校验用）：<access_token>
 ### login — 登录
 
 ```bash
-node cli.js login --link
-node cli.js login --check --access-token "<上一步下发的串>"
+node cli.js login --link --skill-name xhs-search --ai-entry <ai-entry>
+node cli.js login --check --access-token "<上一步下发的串>" --skill-name xhs-search --ai-entry <ai-entry>
 ```
 
 引导话术同 register（把"注册"换成"登录"）。成功后 token 自动保存。
@@ -118,7 +162,7 @@ node cli.js login --check --access-token "<上一步下发的串>"
 ### quota — 查询点数
 
 ```bash
-node cli.js quota
+node cli.js quota --skill-name xhs-search --ai-entry <ai-entry>
 ```
 
 ```json
@@ -128,17 +172,21 @@ node cli.js quota
 ### submit — 提交搜索采集任务
 
 ```bash
-node cli.js submit --keyword "机油"                          # 默认 50 条, 综合排序, 全部类型
-node cli.js submit --keyword "机油" --count 120              # 120 条 (预扣 6 点)
-node cli.js submit --keyword "美孚" --count 40 --sort time_descending --note-type 1
-node cli.js submit --keyword "机油" --count 50 --wait        # 提交并等待结果 (约 3-5 分钟)
-node cli.js submit --keyword "机油" --count 50 --wait --timeout 600 --force
+node cli.js submit --keyword "机油" --skill-name xhs-search --ai-entry <ai-entry>                          # 默认 50 条, 综合排序, 全部不限
+node cli.js submit --keyword "机油" --count 120 --skill-name xhs-search --ai-entry <ai-entry>              # 120 条 (预扣 6 点)
+node cli.js submit --keyword "美孚" --count 40 --sort time_descending --note-type 1 --skill-name xhs-search --ai-entry <ai-entry>
+node cli.js submit --keyword "机油" --count 100 --sort popularity_descending --note-type 2 --note-time 7 --note-range 2 --pos-distance 1 --skill-name xhs-search --ai-entry <ai-entry>   # 最多点赞+图文+一周内+未看过+同城
+node cli.js submit --keyword "机油" --count 50 --wait --skill-name xhs-search --ai-entry <ai-entry>        # 提交并等待结果 (约 3-5 分钟)
+node cli.js submit --keyword "机油" --count 50 --wait --timeout 600 --force --skill-name xhs-search --ai-entry <ai-entry>
 ```
 
 - `--keyword`：搜索关键词（≤64 字符；填笔记链接会被拒绝，单篇互动数请用 xhs-dpt skill）。
 - `--count`：采集条数 1~500（默认 50）。
 - `--sort`：general/time_descending/popularity_descending/comment_descending/collect_descending（默认 general）。
-- `--note-type`：0=全部 1=视频 2=图文（默认 0）。
+- `--note-type`：0=不限 1=视频 2=图文（默认 0）。
+- `--note-time`：0=不限 1=一天内 7=一周内 180=半年内（默认 0）。
+- `--note-range`：0=不限 1=已看过 2=未看过 3=已关注（默认 0）。
+- `--pos-distance`：0=不限 1=同城 2=附近（默认 0）。
 - `--wait`：等待任务终态再返回（推荐）；`--timeout` 轮询超时（默认 600s）；`--interval` 轮询间隔（默认 5s）。
 - `--force`：跳过 24h 相同内容去重强制重提（幂等键混入时间戳）。
 
@@ -147,9 +195,13 @@ node cli.js submit --keyword "机油" --count 50 --wait --timeout 600 --force
 ```json
 {"ok":true,"data":{"task_id":"t_20261012_ab12cd34","capability":"xhs_search","status":"done",
  "success_count":1,"fail_count":0,"charged_quota":15,"refunded_quota":0,
- "items":[{"id":"1","payload":{"keyword":"机油","count":50,"sort":"general","note_type":0},
+ "items":[{"id":"1","payload":{"keyword":"机油","count":50,"sort":"general","note_type":1,
+   "note_time":7,"note_range":0,"pos_distance":0},
    "result":{"keyword":"机油","requested_count":50,"collected_count":45,
              "settle_charged":15,"refunded_diff":0,
+             "filters_effective":{"sort":"general","note_type":1,"note_time":7,
+                                  "note_range":0,"pos_distance":0},
+             "filter_errors":[],"filter_fallback":false,
              "notes":[{"note_id":"64ab...","title":"机油怎么选？一篇讲透",
                         "note_type":"normal","liked_count":"1.2万","collected_count":"890",
                         "comment_count":"156","share_count":"45","nickname":"老司机说车",
@@ -165,14 +217,14 @@ node cli.js submit --keyword "机油" --count 50 --wait --timeout 600 --force
 ### query — 查询任务状态与结果
 
 ```bash
-node cli.js query <task_id>            # 单次查询
-node cli.js query <task_id> --wait     # 轮询到终态 (默认 600s 超时)
+node cli.js query <task_id> --skill-name xhs-search --ai-entry <ai-entry>            # 单次查询
+node cli.js query <task_id> --wait --skill-name xhs-search --ai-entry <ai-entry>     # 轮询到终态 (默认 600s 超时)
 ```
 
 ### export — 导出结果 CSV
 
 ```bash
-node cli.js export <task_id> --wait --out 搜索结果.csv
+node cli.js export <task_id> --wait --out 搜索结果.csv --skill-name xhs-search --ai-entry <ai-entry>
 ```
 
 下载任务结果 CSV（BOM 头，Excel 直开不乱码）：任务汇总（关键词/状态/实采数/实收点数/退差点数）+ 笔记明细（标题/互动数/作者/发布时间/封面/笔记直链）。导出文件保留 7 天。
@@ -180,7 +232,7 @@ node cli.js export <task_id> --wait --out 搜索结果.csv
 ### logout — 登出（切换账号）
 
 ```bash
-node cli.js logout
+node cli.js logout --skill-name xhs-search --ai-entry <ai-entry>
 ```
 
 ### config — 配置管理
@@ -192,11 +244,11 @@ node cli.js config show        # token 脱敏显示
 
 ## 典型工作流（agent 照此执行）
 
-1. 用户说「帮我搜一下 XX 的小红书笔记」→ `node cli.js quota` 确认余额。
-2. 和用户确认关键词、数量、排序、类型；算出预估点数 `ceil(N/20)`；**明确告知计费规则（预扣/结算退差/零头按一次计/零结果失败全退）并等确认**。
-3. `node cli.js submit --keyword "<词>" --count <N> --wait --timeout 600`（3-5 分钟，不重试）。
-4. 如实汇报：实采条数、实收点数、退差点数；简要展示笔记列表（标题/互动数/作者）。
-5. 用户要文件 → `node cli.js export <task_id> --wait --out <文件>.csv`，交付路径。
+1. 用户说「帮我搜一下 XX 的小红书笔记」→ `node cli.js quota --skill-name xhs-search --ai-entry <ai-entry>` 确认余额。
+2. 和用户确认关键词、数量；**主动询问是否需要筛选**（排序/笔记类型/发布时间/搜索范围/位置距离，默认全不限）；算出预估点数 `ceil(N/20)`；**明确告知计费规则（预扣/结算退差/零头按一次计/零结果失败全退）并等确认**。
+3. `node cli.js submit --keyword "<词>" --count <N> [筛选参数] --wait --timeout 600 --skill-name xhs-search --ai-entry <ai-entry>`（3-5 分钟，不重试）。
+4. 如实汇报：实采条数、实收点数、退差点数；若 `filter_fallback=true` 必须说明哪些筛选未生效；简要展示笔记列表（标题/互动数/作者）。
+5. 用户要文件 → `node cli.js export <task_id> --wait --out <文件>.csv --skill-name xhs-search --ai-entry <ai-entry>`，交付路径。
 6. 用户要继续分析 → 可基于笔记直链（带 xsec_token）用 xhs-dpt 采互动数或 xhs-comments 采评论。
 
 ## 错误处理指引

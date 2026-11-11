@@ -8,6 +8,12 @@ description: B站UP主主页投稿采集工具。当用户需要采集某个 B�
 
 # B站UP主主页投稿采集 Skill（b-profile）
 
+## AI 调用来源参数（必填）
+
+所有会访问后端 API 的命令必须携带 `--skill-name b-profile` 和 `--ai-entry <AI工具标识>`（例如 `claude-code`、`codex`、`workbuddy`）。IP 无需传递，由服务端自动获取。首次缺参会告警放行，第二次起拒绝。
+
+示例：`node cli.js quota --skill-name b-profile --ai-entry claude-code`。
+
 封装「小红书能力平台」（FastAPI，`/api/v1`）的 CLI，供 AI agent 调用：提交 B站 UP主主页链接 → 平台调度内网浏览器节点打开主页并**点分页器翻页**，拦截官方投稿接口（`x/space/wbi/arc/search`）响应 → 采集投稿视频列表。
 
 - **能采什么**：投稿视频的标题、简介、播放量（`view_count`）、弹幕（`danmaku_count`）、评论数（`comment_count`）、封面、发布时间、BV 号与视频链接、UP 主昵称。
@@ -15,6 +21,24 @@ description: B站UP主主页投稿采集工具。当用户需要采集某个 B�
 - **适用场景**：竞品/达人内容盘点、选题调研、UP主更新监测、投放选号。
 - **省心机制**：按页计费（1~10 页，每页约 42 条）、结算按实采量退差、零结果/失败/主页不可见全额返还、Agent 友好（stdout 纯 JSON + 统一退出码）。
 - 客户端是零依赖 CLI（Node ≥ 18，无需 `npm install`），全部采集逻辑在后端完成。
+
+## 点数不足怎么办（自动扫码充值）
+
+跑命令时如果点数不够，CLI **不会直接报错退出**，而是自己建一张充值单、把二维码打在终端里：
+
+```
+点数不足，已自动创建充值单 RO2611051712281481f36de19
+金额 10.00 元 → 100 点（支付宝）
+<二维码色块>
+[pay] 已支付
+已到账：+100 点，继续执行原命令
+```
+
+- **在终端里跑**：手机支付宝/微信对着终端扫码 → 付完点数自动到账 → 原命令自动重跑，不用手动再来一遍。
+- **AI agent / 非交互环境**（管道、重定向）：CLI 不阻塞等待，而是返回订单号和充值页地址 `{服务地址}/recharge.html`。把链接交给用户，他在网页扫码付款，付完重跑原命令即可（点数会自动到账）。
+- **主动充值**：`node cli.js pay --yuan 50 --skill-name b-profile --ai-entry <ai-entry>`（不传 `--yuan` 默认 10 元；可加 `--channel alipay` 或 `--channel wechat`）。
+- **不想自动充值**：设环境变量 `XHS_NO_AUTO_PAY=1`，则恢复旧行为（只提示点数不足）。
+- 换算：**1 元 = 10 点**，注册送 10 点。
 
 ## 客服支持
 
@@ -80,8 +104,8 @@ node cli.js version
 **方式一：扫码/链接注册（唯一方式，用户在手机上完成）**
 
 ```bash
-node cli.js register --link        # 生成注册二维码/链接
-node cli.js register --check --access-token "<上一步下发的串>"   # 用户完成后确认并保存 token
+node cli.js register --link --skill-name b-profile --ai-entry <ai-entry>        # 生成注册二维码/链接
+node cli.js register --check --access-token "<上一步下发的串>" --skill-name b-profile --ai-entry <ai-entry>   # 用户完成后确认并保存 token
 ```
 
 `register --link` 的 stdout 返回 `qr_url` / `register_url` / `access_token`。**agent 必须把注册引导原样发给用户**（stderr 里也给出了同样话术，可直接复制）：
@@ -105,8 +129,8 @@ access_token（注册后校验用）：<access_token>
 ### login — 登录
 
 ```bash
-node cli.js login --link
-node cli.js login --check --access-token "<上一步下发的串>"
+node cli.js login --link --skill-name b-profile --ai-entry <ai-entry>
+node cli.js login --check --access-token "<上一步下发的串>" --skill-name b-profile --ai-entry <ai-entry>
 ```
 
 引导话术同 register（把"注册"换成"登录"）。成功后 token 自动保存。
@@ -114,7 +138,7 @@ node cli.js login --check --access-token "<上一步下发的串>"
 ### quota — 查询点数
 
 ```bash
-node cli.js quota
+node cli.js quota --skill-name b-profile --ai-entry <ai-entry>
 ```
 
 ```json
@@ -124,15 +148,15 @@ node cli.js quota
 ### logout — 登出（切换账号）
 
 ```bash
-node cli.js logout
+node cli.js logout --skill-name b-profile --ai-entry <ai-entry>
 ```
 
 ### collect — 提交主页采集任务
 
 ```bash
-node cli.js collect --url "https://space.bilibili.com/1234567/video"
-node cli.js collect --url "https://space.bilibili.com/1234567/video" --pages 3 --wait
-node cli.js collect --url <主页链接> --pages 3 --force     # 跳过 24h 内容去重强制重提
+node cli.js collect --url "https://space.bilibili.com/1234567/video" --skill-name b-profile --ai-entry <ai-entry>
+node cli.js collect --url "https://space.bilibili.com/1234567/video" --pages 3 --wait --skill-name b-profile --ai-entry <ai-entry>
+node cli.js collect --url <主页链接> --pages 3 --force --skill-name b-profile --ai-entry <ai-entry>     # 跳过 24h 内容去重强制重提
 ```
 
 - `--pages` 采集页数（1~10，默认 1；每页约 42 条）。
@@ -169,9 +193,9 @@ node cli.js collect --url <主页链接> --pages 3 --force     # 跳过 24h 内�
 ### query — 查询任务 / 拉取结果
 
 ```bash
-node cli.js query <task_id>                          # 查一次
-node cli.js query <task_id> --wait                   # 轮询直到终态
-node cli.js query <task_id> --wait --interval 5 --timeout 600
+node cli.js query <task_id> --skill-name b-profile --ai-entry <ai-entry>                          # 查一次
+node cli.js query <task_id> --wait --skill-name b-profile --ai-entry <ai-entry>                   # 轮询直到终态
+node cli.js query <task_id> --wait --interval 5 --timeout 600 --skill-name b-profile --ai-entry <ai-entry>
 ```
 
 终态：`done`（成功）/ `failed`（失败，点数全额返还）。
@@ -179,7 +203,7 @@ node cli.js query <task_id> --wait --interval 5 --timeout 600
 ### export — 导出 CSV
 
 ```bash
-node cli.js export <task_id> --wait --out out.csv
+node cli.js export <task_id> --wait --out out.csv --skill-name b-profile --ai-entry <ai-entry>
 ```
 
 生成两段式 CSV（BOM 头，Excel 直开不乱码）：任务汇总 + 投稿明细（标题/简介/播放/弹幕/评论数/封面/发布时间/BV号/链接）。
@@ -194,10 +218,10 @@ node cli.js config show        # token 脱敏显示
 ## 典型工作流（agent 照此执行）
 
 1. 确认用户给的是 UP主主页链接（`space.bilibili.com/<数字ID>`）；视频链接引导改用 `b-collect`。
-2. `node cli.js quota` — 确认剩余点数 ≥ `页数`。
-3. `node cli.js collect --url <主页链接> --pages N --wait` — 一步拿到终态结果（节点翻页约 10-20 秒/页）。
+2. `node cli.js quota --skill-name b-profile --ai-entry <ai-entry>` — 确认剩余点数 ≥ `页数`。
+3. `node cli.js collect --url <主页链接> --pages N --wait --skill-name b-profile --ai-entry <ai-entry>` — 一步拿到终态结果（节点翻页约 10-20 秒/页）。
 4. 解析 stdout JSON：把 `result.videos` 整理成表格返回给用户（标题/播放/弹幕/评论数/发布时间），并如实汇报 `settle_charged`（实收点数）与 `refunded_diff`（退差点数）。
-5. 用户要文件时：`node cli.js export <task_id> --wait --out UP主投稿.csv`，把 CSV 路径交给用户。
+5. 用户要文件时：`node cli.js export <task_id> --wait --out UP主投稿.csv --skill-name b-profile --ai-entry <ai-entry>`，把 CSV 路径交给用户。
 
 ## 错误处理指引
 

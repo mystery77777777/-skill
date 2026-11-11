@@ -20,14 +20,15 @@
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-const { ApiClient, BizError, allowInsecureTls } = require('./src/client');
+const { ApiClient, BizError, allowInsecureTls, skillHeaders, warnSkillResponse } = require('./src/client');
 const { loadConfig, saveConfig, resolveConfig, maskToken, configPaths, DEFAULT_BASE_URL } = require('./src/config');
 const {
   UsageError, printOk, printFail, exitWithError, pollTask, parsePositiveNumber,
 } = require('./src/output');
+const { handleFatal } = require('./src/pay');
 
 const CAPABILITY = 'xhs_search';
-const VERSION = '2.0.1';
+const VERSION = '2.1.0';
 const MAX_COUNT = 500;        // 单任务采集条数上限 (服务端 search.max_count)
 const DEFAULT_COUNT = 50;
 const BILL_UNIT = 20;         // 计费粒度: 一次接口返回的主帖数
@@ -36,11 +37,16 @@ const DOWNLOAD_TIMEOUT_MS = 60000;
 
 const SORT_WHITELIST = new Set(['general', 'time_descending', 'popularity_descending',
   'comment_descending', 'collect_descending']);
+// 筛选项白名单 (与搜索页「筛选」面板一致; 非法值回退 0=不限, 不拒单)
+const NOTE_TIMES = new Set([0, 1, 7, 180]);   // 0=不限 1=一天内 7=一周内 180=半年内
+const NOTE_RANGES = new Set([0, 1, 2, 3]);    // 0=不限 1=已看过 2=未看过 3=已关注
+const POS_DISTANCES = new Set([0, 1, 2]);     // 0=不限 1=同城 2=附近
 
 // ---------------------------------------------------------------- 参数解析
 
-const VALUE_FLAGS = new Set(['keyword', 'count', 'sort', 'note-type', 'interval',
-  'timeout', 'token', 'base-url', 'access-token', 'out']);
+const VALUE_FLAGS = new Set(['yuan', 'channel', 'keyword', 'count', 'sort', 'note-type',
+  'note-time', 'note-range', 'pos-distance', 'interval',
+  'timeout', 'token', 'base-url', 'access-token', 'out', 'skill-name', 'ai-entry']);
 const BOOL_FLAGS = new Set(['wait', 'help', 'link', 'check', 'force', 'version']);
 
 function camel(s) {
@@ -88,17 +94,22 @@ const USAGE = `小红书搜索笔记采集 CLI (关键词搜索, 采集笔记列
   register --check --access-token <串>  用户完成注册后确认并保存 token
   login --link                      生成登录二维码/链接（推荐）
   login --check --access-token <串> 用户完成授权后确认并保存 token
-  submit --keyword <关键词> [--count N] [--sort S] [--note-type T] [--wait] [--timeout 秒] [--force]
+  submit --keyword <关键词> [--count N] [--sort S] [--note-type T]
+         [--note-time D] [--note-range R] [--pos-distance P] [--wait] [--timeout 秒] [--force]
                                     提交搜索采集任务（每任务 1 个关键词, 1~500 条；
                                     --sort: general/time_descending/popularity_descending/
                                     comment_descending/collect_descending (默认 general);
-                                    --note-type: 0=全部 1=视频 2=图文 (默认 0);
+                                    --note-type: 0=不限 1=视频 2=图文 (默认 0);
+                                    --note-time: 0=不限 1=一天内 7=一周内 180=半年内 (默认 0);
+                                    --note-range: 0=不限 1=已看过 2=未看过 3=已关注 (默认 0);
+                                    --pos-distance: 0=不限 1=同城 2=附近 (默认 0);
                                     --force 跳过 24h 内容去重强制重提；
                                     --wait 等待结果, 默认超时 600s（节点滚动约 3-5 分钟））
   query <task_id> [--wait]          查询任务状态与结果
   export <task_id> [--wait] [--out <文件路径>] [--timeout 秒]
                                     导出任务结果 CSV（保留 7 天；--wait 等待生成, 默认超时 300s）
   quota                             查询点数与个人信息
+  pay                               扫码充值点数（终端出二维码，付完自动继续）
   logout                            登出当前账号
   config set base-url <url>         设置后端服务地址
   config set insecure true|false    忽略 HTTPS 证书校验（自签证书时开）
@@ -108,7 +119,9 @@ const USAGE = `小红书搜索笔记采集 CLI (关键词搜索, 采集笔记列
 计费: 一次接口返回（20 条主帖）= 1 点数；预扣 ceil(条数/20)，结算按实采量退差，
 零头按一次计；零结果或失败全额返还。
 
-全局参数: --token <token>（临时覆盖）  --base-url <url>（默认 ${DEFAULT_BASE_URL}）`;
+全局参数: --token <token>（临时覆盖）  --base-url <url>（默认 ${DEFAULT_BASE_URL}）
+
+AI 来源参数（所有 API 命令必填）: --skill-name <本Skill名> --ai-entry <AI工具标识>`;
 
 // ---------------------------------------------------------------- 公共
 
@@ -210,25 +223,46 @@ async function cmdSubmit(opts) {
   // sort: 白名单外回退 general (与服务端一致, 不拒单)
   const sort = SORT_WHITELIST.has(opts.sort) ? opts.sort : 'general';
 
-  // note_type: 0=全部 1=视频 2=图文
+  // note_type: 0=不限 1=视频 2=图文
   if (opts.noteType !== undefined && !/^[012]$/.test(String(opts.noteType))) {
-    throw new UsageError('--note-type 仅支持 0=全部 1=视频 2=图文');
+    throw new UsageError('--note-type 仅支持 0=不限 1=视频 2=图文');
   }
   const noteType = opts.noteType !== undefined ? parseInt(opts.noteType, 10) : 0;
+
+  // 其余筛选项: 白名单外回退 0=不限 (与服务端一致, 不拒单)
+  const pickInt = (raw, whitelist) => {
+    const n = parseInt(raw, 10);
+    return whitelist.has(n) ? n : 0;
+  };
+  const noteTime = pickInt(opts.noteTime, NOTE_TIMES);
+  const noteRange = pickInt(opts.noteRange, NOTE_RANGES);
+  const posDistance = pickInt(opts.posDistance, POS_DISTANCES);
 
   // 提交前读价格, 本地透出预估点数 (免登录接口, 失败兜底 5)
   const { price } = await fetchPrice(cfg.baseUrl);
   const billUnits = ceilDiv(count, BILL_UNIT);
   const estimatedPoints = billUnits * price;
 
-  const items = [{ id: 1, payload: { keyword, count, sort, note_type: noteType } }];
+  const items = [{
+    id: 1,
+    payload: {
+      keyword, count, sort, note_type: noteType,
+      note_time: noteTime, note_range: noteRange, pos_distance: posDistance,
+    },
+  }];
   // 幂等键按参数派生: 同参数重试复用同键 (服务端幂等, 不重复扣费);
   // --force 时混入时间戳生成新键 (服务端同时跳过 24h 去重)
-  const idemSource = `${keyword}|${count}|${sort}|${noteType}` + (opts.force ? `|#force:${Date.now()}` : '');
+  const idemSource = `${keyword}|${count}|${sort}|${noteType}|${noteTime}|${noteRange}|${posDistance}`
+    + (opts.force ? `|#force:${Date.now()}` : '');
   const idempotencyKey = crypto.createHash('sha256').update(idemSource).digest('hex').slice(0, 32);
 
+  const timeLabel = { 0: '不限', 1: '一天内', 7: '一周内', 180: '半年内' }[noteTime];
+  const rangeLabel = { 0: '不限', 1: '已看过', 2: '未看过', 3: '已关注' }[noteRange];
+  const posLabel = { 0: '不限', 1: '同城', 2: '附近' }[posDistance];
   process.stderr.write(
-    `提交搜索采集任务: 关键词="${keyword}" 数量=${count} 排序=${sort} 类型=${['全部', '视频', '图文'][noteType]}\n` +
+    `提交搜索采集任务: 关键词="${keyword}" 数量=${count} 排序=${sort} ` +
+    `类型=${['不限', '视频', '图文'][noteType]} 发布时间=${timeLabel} ` +
+    `搜索范围=${rangeLabel} 位置距离=${posLabel}\n` +
     `计费: 预扣 ${billUnits}×${price}=${estimatedPoints} 点 (每 20 条=${price} 点), ` +
     `按实采量结算退差, 零结果/失败全额返还 (幂等键 ${idempotencyKey}${opts.force ? ', force' : ''})...\n`);
 
@@ -246,10 +280,14 @@ async function cmdSubmit(opts) {
     intervalSec: parsePositiveNumber(opts.interval, 'interval', 5),
     timeoutSec: parsePositiveNumber(opts.timeout, 'timeout', 600),
   });
+  const itemResult = (task.items && task.items[0] && task.items[0].result) || {};
   process.stderr.write(
-    `任务完成: status=${task.status}，实采 ${(task.items && task.items[0] && task.items[0].result
-      && task.items[0].result.collected_count) || 0} 条，` +
-    `请查看 result 里的 settle_charged(实收点数)/refunded_diff(退差点数) 如实汇报给用户。\n`);
+    `任务完成: status=${task.status}，实采 ${itemResult.collected_count || 0} 条，` +
+    `请查看 result 里的 settle_charged(实收点数)/refunded_diff(退差点数) 如实汇报给用户。` +
+    (itemResult.filter_fallback
+      ? `注意: 节点筛选降级(filter_fallback=true, ${(itemResult.filter_errors || []).join('; ')})，` +
+        '本次结果为不筛选数据，必须如实告知用户。\n'
+      : '\n'));
   printOk(task);
 }
 
@@ -315,7 +353,8 @@ async function cmdExport(args, opts) {
   let buf;
   try {
     const res = await fetch(`${cfg.baseUrl}/api/v1/platform/exports/${encodeURIComponent(info.export_id)}/file`,
-      { headers: { Authorization: `Bearer ${cfg.token}` }, signal: dlCtrl.signal });
+      { headers: { Authorization: `Bearer ${cfg.token}`, ...skillHeaders() }, signal: dlCtrl.signal });
+    warnSkillResponse(res);
     if (!res.ok) {
       printFail('EXPORT_FAILED', `下载失败 HTTP ${res.status}`);
       process.exit(5);
@@ -417,10 +456,19 @@ async function main() {
     case 'query': return cmdQuery(args, opts);
     case 'export': return cmdExport(args, opts);
     case 'quota': return cmdQuota(opts);
+    case 'pay': {
+      // 主动充值: 建单 → 终端二维码 → (交互)等到账
+      const { rechargeFlow } = require('./src/pay');
+      const res = await rechargeFlow({ yuan: opts.yuan, channel: opts.channel });
+      return printOk({
+        order_no: res.order.order_no, points: res.order.points,
+        status: res.order.status, paid: !res.pending, pay_url: res.payUrl,
+      });
+    }
     case 'logout': return cmdLogout(opts);
     case 'config': return cmdConfig(args, opts);
     default: throw new UsageError(`未知命令: ${cmd}`);
   }
 }
 
-main().catch((e) => exitWithError(e, { usage: USAGE }));
+main().catch((e) => handleFatal(e, main, { usage: USAGE }));

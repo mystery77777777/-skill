@@ -8,9 +8,33 @@ description: 小红书笔记链接批量转链工具。当用户提到小红书�
 
 # 小红书转链 Skill（xhs-convert-url-pro）
 
+## AI 调用来源参数（必填）
+
+所有会访问后端 API 的命令必须携带 `--skill-name xhs-convert-url-pro` 和 `--ai-entry <AI工具标识>`（例如 `claude-code`、`codex`、`workbuddy`）。IP 无需传递，由服务端自动获取。首次缺参会告警放行，第二次起拒绝。
+
+示例：`node cli.js quota --skill-name xhs-convert-url-pro --ai-entry claude-code`。
+
 封装「小红书转链服务」（FastAPI，`/api/v1`）的 CLI，供 AI agent 调用：提交小红书链接 → 轮询任务 → 拿到转链后的 `new_url`（携带 `xsec_token`，浏览器可直接打开）。
 
 与「小红书互动数采集」skill（`xhs-dpt`）同框架、同凭证、同输出规约：两个 skill 共用 `~/.xhs-platform/config.json`，登录一次两边通用，`logout` 会同时使两个 skill 失效。
+
+## 点数不足怎么办（自动扫码充值）
+
+跑命令时如果点数不够，CLI **不会直接报错退出**，而是自己建一张充值单、把二维码打在终端里：
+
+```
+点数不足，已自动创建充值单 RO2611051712281481f36de19
+金额 10.00 元 → 100 点（支付宝）
+<二维码色块>
+[pay] 已支付
+已到账：+100 点，继续执行原命令
+```
+
+- **在终端里跑**：手机支付宝/微信对着终端扫码 → 付完点数自动到账 → 原命令自动重跑，不用手动再来一遍。
+- **AI agent / 非交互环境**（管道、重定向）：CLI 不阻塞等待，而是返回订单号和充值页地址 `{服务地址}/recharge.html`。把链接交给用户，他在网页扫码付款，付完重跑原命令即可（点数会自动到账）。
+- **主动充值**：`node cli.js pay --yuan 50 --skill-name xhs-convert-url-pro --ai-entry <ai-entry>`（不传 `--yuan` 默认 10 元；可加 `--channel alipay` 或 `--channel wechat`）。
+- **不想自动充值**：设环境变量 `XHS_NO_AUTO_PAY=1`，则恢复旧行为（只提示点数不足）。
+- 换算：**1 元 = 10 点**，注册送 10 点。
 
 ## 客服支持
 
@@ -61,8 +85,8 @@ node cli.js version
 ### register — 注册（注册即送 10 点数）
 
 ```bash
-node cli.js register --link        # 生成注册二维码/链接
-node cli.js register --check --access-token "<上一步下发的串>"   # 用户完成后确认并保存 token
+node cli.js register --link --skill-name xhs-convert-url-pro --ai-entry <ai-entry>        # 生成注册二维码/链接
+node cli.js register --check --access-token "<上一步下发的串>" --skill-name xhs-convert-url-pro --ai-entry <ai-entry>   # 用户完成后确认并保存 token
 ```
 
 `register --link` 的 stdout 返回 `qr_url` / `register_url` / `access_token`。**agent 必须把注册引导原样发给用户**（stderr 里也给出了同样的话术，可直接复制）：
@@ -92,8 +116,8 @@ access_token（注册后校验用）：<access_token>
 ### login — 登录
 
 ```bash
-node cli.js login --link        # 生成登录二维码/链接
-node cli.js login --check --access-token "<上一步下发的串>"   # 用户完成后确认并保存 token
+node cli.js login --link --skill-name xhs-convert-url-pro --ai-entry <ai-entry>        # 生成登录二维码/链接
+node cli.js login --check --access-token "<上一步下发的串>" --skill-name xhs-convert-url-pro --ai-entry <ai-entry>   # 用户完成后确认并保存 token
 ```
 
 `login --link` 的 stdout 返回 `qr_url` / `login_url` / `access_token`。**agent 必须把登录引导原样发给用户**（stderr 里也给出了同样的话术，可直接复制）：
@@ -117,7 +141,7 @@ access_token（登录后校验用）：<access_token>
 ### quota — 查询点数
 
 ```bash
-node cli.js quota
+node cli.js quota --skill-name xhs-convert-url-pro --ai-entry <ai-entry>
 ```
 
 输出示例：
@@ -129,7 +153,7 @@ node cli.js quota
 ### logout — 登出（切换账号）
 
 ```bash
-node cli.js logout
+node cli.js logout --skill-name xhs-convert-url-pro --ai-entry <ai-entry>
 ```
 
 服务端吊销当前 token 并清除本地保存的 token（**采集 skill 同步失效**）。之后可执行 `login --link` 登录其他账号。输出示例：
@@ -141,10 +165,10 @@ node cli.js logout
 ### submit — 提交转链任务
 
 ```bash
-node cli.js submit --url "https://www.xiaohongshu.com/explore/6970ac3c000000000a03d7d5" \
+node cli.js submit --url "https://www.xiaohongshu.com/explore/6970ac3c000000000a03d7d5" --skill-name xhs-convert-url-pro --ai-entry <ai-entry> \
                    --url "http://xhslink.com/o/pl4tP4IXRa"
-node cli.js submit --file urls.txt            # 每行一条 URL，忽略空行与 # 注释行
-node cli.js submit --file urls.txt --wait     # 提交后轮询等待终态（推荐）
+node cli.js submit --file urls.txt --skill-name xhs-convert-url-pro --ai-entry <ai-entry>            # 每行一条 URL，忽略空行与 # 注释行
+node cli.js submit --file urls.txt --wait --skill-name xhs-convert-url-pro --ai-entry <ai-entry>     # 提交后轮询等待终态（推荐）
 ```
 
 - `--url` 可重复；`--file` 按行读取；二者可混合；总数 1~50 条。
@@ -162,9 +186,9 @@ node cli.js submit --file urls.txt --wait     # 提交后轮询等待终态（�
 ### query — 查询任务 / 拉取结果
 
 ```bash
-node cli.js query <task_id>                          # 查一次
-node cli.js query <task_id> --wait                   # 轮询直到终态
-node cli.js query <task_id> --wait --interval 3 --timeout 300
+node cli.js query <task_id> --skill-name xhs-convert-url-pro --ai-entry <ai-entry>                          # 查一次
+node cli.js query <task_id> --wait --skill-name xhs-convert-url-pro --ai-entry <ai-entry>                   # 轮询直到终态
+node cli.js query <task_id> --wait --interval 3 --timeout 300 --skill-name xhs-convert-url-pro --ai-entry <ai-entry>
 ```
 
 - `--interval` 轮询间隔秒数（默认 2），`--timeout` 轮询总超时秒数（默认 120）。
@@ -192,13 +216,13 @@ node cli.js config show        # token 脱敏显示
 用户要"转链 + 采集"时，两个 skill 配合使用：
 
 1. 用本 skill `submit --url <链接> ... --wait` 拿到带 `xsec_token` 的 `new_url` 列表。
-2. 把 `new_url` 作为笔记链接传给采集 skill `xhs-dpt`：`node cli.js submit --url <new_url> --wait`（采集 skill 要求链接必须带 `xsec_token`，转链结果天然满足）。
+2. 把 `new_url` 作为笔记链接传给采集 skill `xhs-dpt`：`node cli.js submit --url <new_url> --wait --skill-name xhs-convert-url-pro --ai-entry <ai-entry>`（采集 skill 要求链接必须带 `xsec_token`，转链结果天然满足）。
 3. 两个 skill 凭证通用：任一 skill `register --link` / `login --link` 后，另一个无需再登录。
 
 ## 典型工作流（agent 照此执行）
 
-1. `node cli.js quota` — 确认剩余点数 ≥ 待提交有效 URL 数。
-2. `node cli.js submit --url <url1> --url <url2> ... --wait` — 一步拿到终态结果（URL 较多时用 `--file`）。
+1. `node cli.js quota --skill-name xhs-convert-url-pro --ai-entry <ai-entry>` — 确认剩余点数 ≥ 待提交有效 URL 数。
+2. `node cli.js submit --url <url1> --url <url2> ... --wait --skill-name xhs-convert-url-pro --ai-entry <ai-entry>` — 一步拿到终态结果（URL 较多时用 `--file`）。
 3. 解析 stdout JSON：遍历 `data.items`，把 `status==="success"` 的 `new_url` 按原顺序整理返回给用户；对 `failed`/`invalid` 的条目附 `fail_reason` 说明。
 
 ## 错误处理指引

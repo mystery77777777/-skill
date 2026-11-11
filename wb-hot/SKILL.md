@@ -8,6 +8,12 @@ description: 微博实时热榜采集工具。当用户需要获取当前微博�
 
 # 微博热榜采集 Skill（wb-hot）
 
+## AI 调用来源参数（必填）
+
+所有会访问后端 API 的命令必须携带 `--skill-name wb-hot` 和 `--ai-entry <AI工具标识>`（例如 `claude-code`、`codex`、`workbuddy`）。IP 无需传递，由服务端自动获取。首次缺参会告警放行，第二次起拒绝。
+
+示例：`node cli.js quota --skill-name wb-hot --ai-entry claude-code`。
+
 封装「社媒采集平台」（FastAPI，`/api/v1`）的零依赖 Node CLI。提交任务后，**服务端直接通过 HTTP** 请求微博公开热榜接口，返回实时榜单；无需用户打开浏览器，也无需微博登录。
 
 - **能采什么**：排名（`rank`）、热搜标题（`title`）、关键词（`keyword`）、热度值（`hot_value`）、标签（`label`）、分类（`category`）、微博搜索链接（`url`）。
@@ -20,6 +26,24 @@ description: 微博实时热榜采集工具。当用户需要获取当前微博�
 
 - **点数换算：0.1 元 = 1 点数。**
 
+## 点数不足怎么办（自动扫码充值）
+
+跑命令时如果点数不够，CLI **不会直接报错退出**，而是自己建一张充值单、把二维码打在终端里：
+
+```
+点数不足，已自动创建充值单 RO2611051712281481f36de19
+金额 10.00 元 → 100 点（支付宝）
+<二维码色块>
+[pay] 已支付
+已到账：+100 点，继续执行原命令
+```
+
+- **在终端里跑**：手机支付宝/微信对着终端扫码 → 付完点数自动到账 → 原命令自动重跑，不用手动再来一遍。
+- **AI agent / 非交互环境**（管道、重定向）：CLI 不阻塞等待，而是返回订单号和充值页地址 `{服务地址}/recharge.html`。把链接交给用户，他在网页扫码付款，付完重跑原命令即可（点数会自动到账）。
+- **主动充值**：`node cli.js pay --yuan 50 --skill-name wb-hot --ai-entry <ai-entry>`（不传 `--yuan` 默认 10 元；可加 `--channel alipay` 或 `--channel wechat`）。
+- **不想自动充值**：设环境变量 `XHS_NO_AUTO_PAY=1`，则恢复旧行为（只提示点数不足）。
+- 换算：**1 元 = 10 点**，注册送 10 点。
+
 ## 客服支持
 
 - 客服微信（扫码添加）：http://st.aidata366.com/assets/concat.png
@@ -29,7 +53,7 @@ description: 微博实时热榜采集工具。当用户需要获取当前微博�
 
 采集本身不需要微博账号，但平台任务接口需要平台账号和点数：
 
-1. 首次使用执行 `node cli.js register --link`（新用户）或 `node cli.js login --link`（已有账号）。
+1. 首次使用执行 `node cli.js register --link --skill-name wb-hot --ai-entry <ai-entry>`（新用户）或 `node cli.js login --link --skill-name wb-hot --ai-entry <ai-entry>`（已有账号）。
 2. 把 stderr 中的注册/登录引导**原样发给用户**；用户完成后执行对应的 `--check --access-token "<串>"`。
 3. token 保存于 `~/.xhs-platform/config.json`，与其他社媒 skill 共用账号体系；不要泄露或提交 git。
 4. 默认后端为 `http://st.aidata366.com`，可执行 `node cli.js config set base-url <url>` 修改。默认地址为明文 HTTP，token 会明文传输；条件允许时切换 HTTPS。
@@ -40,8 +64,8 @@ description: 微博实时热榜采集工具。当用户需要获取当前微博�
 
 ```bash
 node cli.js version
-node cli.js quota
-node cli.js logout
+node cli.js quota --skill-name wb-hot --ai-entry <ai-entry>
+node cli.js logout --skill-name wb-hot --ai-entry <ai-entry>
 node cli.js config show
 node cli.js config set base-url http://127.0.0.1:8084
 ```
@@ -55,8 +79,8 @@ node cli.js config set base-url http://127.0.0.1:8084
 ### submit — 采集当前热榜
 
 ```bash
-node cli.js submit --wait
-node cli.js submit --wait --force   # 24h 内已采过，也要重新获取最新榜单
+node cli.js submit --wait --skill-name wb-hot --ai-entry <ai-entry>
+node cli.js submit --wait --force --skill-name wb-hot --ai-entry <ai-entry>   # 24h 内已采过，也要重新获取最新榜单
 ```
 
 - 不需要关键词、链接或条数参数。
@@ -79,22 +103,22 @@ Agent 应读取 `data.items[0].result.hot_list` 整理结果，并按 `collected
 ### query — 查询任务 / 拉取热榜
 
 ```bash
-node cli.js query <task_id>
-node cli.js query <task_id> --wait
+node cli.js query <task_id> --skill-name wb-hot --ai-entry <ai-entry>
+node cli.js query <task_id> --wait --skill-name wb-hot --ai-entry <ai-entry>
 ```
 
 ### export — 导出 CSV
 
 ```bash
-node cli.js export <task_id> --wait --out 微博热榜.csv
+node cli.js export <task_id> --wait --out 微博热榜.csv --skill-name wb-hot --ai-entry <ai-entry>
 ```
 
 CSV 带 BOM，Excel 可直接打开；包含任务汇总与热榜明细（排名、标题、关键词、热度、标签、分类、链接）。
 
 ## 典型工作流
 
-1. 用户要求当前微博热搜/热榜时，直接执行 `node cli.js quota` 检查点数。
-2. 执行 `node cli.js submit --wait`；24h 内重复采集最新榜单时加 `--force`。
+1. 用户要求当前微博热搜/热榜时，直接执行 `node cli.js quota --skill-name wb-hot --ai-entry <ai-entry>` 检查点数。
+2. 执行 `node cli.js submit --wait --skill-name wb-hot --ai-entry <ai-entry>`；24h 内重复采集最新榜单时加 `--force`。
 3. 解析 stdout JSON，将 `result.hot_list` 按 `rank` 返回给用户。
 4. 用户需要文件时执行 `export <task_id> --wait --out <文件名>.csv`。
 

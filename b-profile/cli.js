@@ -21,11 +21,12 @@
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-const { ApiClient, BizError, allowInsecureTls } = require('./src/client');
+const { ApiClient, BizError, allowInsecureTls, skillHeaders, warnSkillResponse } = require('./src/client');
 const { loadConfig, saveConfig, resolveConfig, maskToken, configPaths, DEFAULT_BASE_URL } = require('./src/config');
 const {
   UsageError, printOk, printFail, exitWithError, pollTask, parsePositiveNumber,
 } = require('./src/output');
+const { handleFatal } = require('./src/pay');
 
 const CAPABILITY = 'b_profile';
 const VERSION = '1.0.0';
@@ -37,7 +38,7 @@ const DOWNLOAD_TIMEOUT_MS = 60000;
 
 // ---------------------------------------------------------------- 参数解析
 
-const VALUE_FLAGS = new Set(['url', 'pages', 'interval', 'timeout', 'token', 'base-url', 'access-token', 'out']);
+const VALUE_FLAGS = new Set(['yuan', 'channel', 'url', 'pages', 'interval', 'timeout', 'token', 'base-url', 'access-token', 'out', 'skill-name', 'ai-entry']);
 const BOOL_FLAGS = new Set(['wait', 'help', 'link', 'check', 'force', 'version']);
 
 function camel(s) {
@@ -96,6 +97,7 @@ const USAGE = `B站 UP主主页投稿采集 CLI (主页链接, 采集其投稿�
                                     导出任务结果 CSV（保留 7 天）
 
   quota                             查询点数与个人信息
+  pay                               扫码充值点数（终端出二维码，付完自动继续）
   logout                            登出当前账号
   config set base-url <url>         设置后端服务地址
   config set insecure true|false    忽略 HTTPS 证书校验（自签证书时开）
@@ -105,7 +107,9 @@ const USAGE = `B站 UP主主页投稿采集 CLI (主页链接, 采集其投稿�
 计费: 一页（约 42 条）= 1 点数；预扣 页数、结算按实采量退差（零头按一页计）；
 零结果/采集失败/主页不可见 → 全额返还。
 
-全局参数: --token <token>（临时覆盖）  --base-url <url>（默认 ${DEFAULT_BASE_URL}）`;
+全局参数: --token <token>（临时覆盖）  --base-url <url>（默认 ${DEFAULT_BASE_URL}）
+
+AI 来源参数（所有 API 命令必填）: --skill-name <本Skill名> --ai-entry <AI工具标识>`;
 
 // ---------------------------------------------------------------- 公共
 
@@ -324,7 +328,8 @@ async function downloadToFile(cfg, url, out, extra) {
   let buf;
   try {
     const res = await fetch(url,
-      { headers: { Authorization: `Bearer ${cfg.token}` }, signal: dlCtrl.signal });
+      { headers: { Authorization: `Bearer ${cfg.token}`, ...skillHeaders() }, signal: dlCtrl.signal });
+    warnSkillResponse(res);
     if (!res.ok) {
       printFail('EXPORT_FAILED', `下载失败 HTTP ${res.status}`);
       process.exit(5);
@@ -427,10 +432,19 @@ async function main() {
     case 'query': return cmdQuery(args, opts);
     case 'export': return cmdExport(args, opts);
     case 'quota': return cmdQuota(opts);
+    case 'pay': {
+      // 主动充值: 建单 → 终端二维码 → (交互)等到账
+      const { rechargeFlow } = require('./src/pay');
+      const res = await rechargeFlow({ yuan: opts.yuan, channel: opts.channel });
+      return printOk({
+        order_no: res.order.order_no, points: res.order.points,
+        status: res.order.status, paid: !res.pending, pay_url: res.payUrl,
+      });
+    }
     case 'logout': return cmdLogout(opts);
     case 'config': return cmdConfig(args, opts);
     default: throw new UsageError(`未知命令: ${cmd}`);
   }
 }
 
-main().catch((e) => exitWithError(e, { usage: USAGE }));
+main().catch((e) => handleFatal(e, main, { usage: USAGE }));

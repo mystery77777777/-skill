@@ -8,6 +8,12 @@ description: 小红书笔记评论分步采集工具（用户洞察，会话制�
 
 # 小红书评论分步采集 Skill（xhs-comments v2）
 
+## AI 调用来源参数（必填）
+
+所有会访问后端 API 的命令必须携带 `--skill-name xhs-comments` 和 `--ai-entry <AI工具标识>`（例如 `claude-code`、`codex`、`workbuddy`）。IP 无需传递，由服务端自动获取。首次缺参会告警放行，第二次起拒绝。
+
+示例：`node cli.js quota --skill-name xhs-comments --ai-entry claude-code`。
+
 封装「小红书能力平台」（FastAPI，`/api/v1`）的 CLI，供 AI agent 调用。v2 起改为**分步会话制**：先免费拿到笔记评论总数 → 用户确认后按页/按展开逐步计费采集，每一步的结果立即返回给你展示给用户。
 
 - **能采什么**：公开笔记的评论明细（`nickname` 昵称、`content` 评论正文、`like_count` 点赞数、`ip_location` IP 属地、`sub_count` 子评论数、`comment_id` / `root_comment_id`）。主评论每页 10 条（含 0~2 条内嵌子评论预览）；子评论点一次展开约 5 条。
@@ -16,6 +22,24 @@ description: 小红书笔记评论分步采集工具（用户洞察，会话制�
 - **省心机制**：无效链接不建会话不扣费、采到底/no_more 的步不扣费、服务侧失败自动返还当步点数、Agent 友好（stdout 纯 JSON + 统一退出码）。
 - 采集由**平台调度内网浏览器节点**完成（节点登录态在浏览器端人工维护，平台不持有账号）。
 - 客户端是零依赖 CLI（Node ≥ 18，无需 `npm install`），全部采集逻辑在后端完成。
+
+## 点数不足怎么办（自动扫码充值）
+
+跑命令时如果点数不够，CLI **不会直接报错退出**，而是自己建一张充值单、把二维码打在终端里：
+
+```
+点数不足，已自动创建充值单 RO2611051712281481f36de19
+金额 10.00 元 → 100 点（支付宝）
+<二维码色块>
+[pay] 已支付
+已到账：+100 点，继续执行原命令
+```
+
+- **在终端里跑**：手机支付宝/微信对着终端扫码 → 付完点数自动到账 → 原命令自动重跑，不用手动再来一遍。
+- **AI agent / 非交互环境**（管道、重定向）：CLI 不阻塞等待，而是返回订单号和充值页地址 `{服务地址}/recharge.html`。把链接交给用户，他在网页扫码付款，付完重跑原命令即可（点数会自动到账）。
+- **主动充值**：`node cli.js pay --yuan 50 --skill-name xhs-comments --ai-entry <ai-entry>`（不传 `--yuan` 默认 10 元；可加 `--channel alipay` 或 `--channel wechat`）。
+- **不想自动充值**：设环境变量 `XHS_NO_AUTO_PAY=1`，则恢复旧行为（只提示点数不足）。
+- 换算：**1 元 = 10 点**，注册送 10 点。
 
 ## 客服支持
 
@@ -35,14 +59,14 @@ description: 小红书笔记评论分步采集工具（用户洞察，会话制�
 
 v2 是**人机分步交互**，不是一次性跑完。请按下面的流程驱动对话：
 
-1. **建会话（免费）**：`node cli.js start --url "<笔记链接>"`。直链（带不带 xsec_token 均可）和 `xhslink.com` 短链都直接传，服务端自动转链补齐 token，无需调用其它转链 skill。
+1. **建会话（免费）**：`node cli.js start --url "<笔记链接>" --skill-name xhs-comments --ai-entry <ai-entry>`。直链（带不带 xsec_token 均可）和 `xhslink.com` 短链都直接传，服务端自动转链补齐 token，无需调用其它转链 skill。
 2. **报数确认（必须）**：把返回的 `metrics.comment_count`（评论总数）和 `estimated_pages`（预估页数，每页 10 条 = 1 点）**明确告知用户**，例如「这篇笔记共约 326 条评论，全采约需 33 页（33 点）。要开始采集吗？」。**未经用户确认不要执行任何 step。**
-3. **按页采集**：用户确认后 `node cli.js step --session <id>` 采下一页主评论（默认即 --page）。把本页 10 条评论整理展示给用户。
+3. **按页采集**：用户确认后 `node cli.js step --session <id> --skill-name xhs-comments --ai-entry <ai-entry>` 采下一页主评论（默认即 --page）。把本页 10 条评论整理展示给用户。
 4. **每页采完询问下一步**：
    - 若 `has_more_main=true`，问用户「是否继续采下一页（再扣 1 点）？」
    - 若返回的 `expandable` 非空（本页有主评论含可展开子评论），列出这些评论（`root_comment_id`、子评论总数、已采数），问用户「是否展开某条的子评论（每次展开约 5 条、扣 1 点）？」
-5. **展开子评论**：用户指定后 `node cli.js step --session <id> --expand --root <root_comment_id>`。返回本次约 5 条子评论；若 `sub_has_more=true`，**先展示本次结果，再问用户是否继续展开该条**（继续再扣 1 点）。
-6. **结束**：用户说够了 → `node cli.js finish --session <id>` 结束会话释放采集节点；需要文件 → `node cli.js export --session <id> --out 评论.csv`。
+5. **展开子评论**：用户指定后 `node cli.js step --session <id> --expand --root <root_comment_id> --skill-name xhs-comments --ai-entry <ai-entry>`。返回本次约 5 条子评论；若 `sub_has_more=true`，**先展示本次结果，再问用户是否继续展开该条**（继续再扣 1 点）。
+6. **结束**：用户说够了 → `node cli.js finish --session <id> --skill-name xhs-comments --ai-entry <ai-entry>` 结束会话释放采集节点；需要文件 → `node cli.js export --session <id> --out 评论.csv --skill-name xhs-comments --ai-entry <ai-entry>`。
 7. **20 分钟空闲租约**：每步采完后会话保持 20 分钟；超时无继续指令会话自动过期、节点释放。过期后（错误码 3006 / status=expired）如需继续，只能重新 `start` 建会话从头采（原会话已采数据仍可用 `comments`/`export` 读取）。
 
 **no_more 免扣费**：`step` 返回 `no_more: true` 表示主评论已采完（或该主评论子评论已全部展开），**该次请求不扣费**，如实告知用户。
@@ -85,8 +109,8 @@ node cli.js version
 **方式一：扫码/链接注册（唯一方式，用户在手机上完成）**
 
 ```bash
-node cli.js register --link        # 生成注册二维码/链接
-node cli.js register --check --access-token "<上一步下发的串>"   # 用户完成后确认并保存 token
+node cli.js register --link --skill-name xhs-comments --ai-entry <ai-entry>        # 生成注册二维码/链接
+node cli.js register --check --access-token "<上一步下发的串>" --skill-name xhs-comments --ai-entry <ai-entry>   # 用户完成后确认并保存 token
 ```
 
 `register --link` 的 stdout 返回 `qr_url` / `register_url` / `access_token`。**agent 必须把注册引导原样发给用户**（stderr 里也给出了同样话术，可直接复制）：
@@ -110,8 +134,8 @@ access_token（注册后校验用）：<access_token>
 ### login — 登录
 
 ```bash
-node cli.js login --link
-node cli.js login --check --access-token "<上一步下发的串>"
+node cli.js login --link --skill-name xhs-comments --ai-entry <ai-entry>
+node cli.js login --check --access-token "<上一步下发的串>" --skill-name xhs-comments --ai-entry <ai-entry>
 ```
 
 引导话术同 register（把"注册"换成"登录"）。成功后 token 自动保存。
@@ -119,7 +143,7 @@ node cli.js login --check --access-token "<上一步下发的串>"
 ### quota — 查询点数
 
 ```bash
-node cli.js quota
+node cli.js quota --skill-name xhs-comments --ai-entry <ai-entry>
 ```
 
 ```json
@@ -129,8 +153,8 @@ node cli.js quota
 ### start — 建立采集会话（免费）
 
 ```bash
-node cli.js start --url "https://www.xiaohongshu.com/explore/6ac86a34000000001801361e?xsec_token=..."
-node cli.js start --url "https://xhslink.com/a/xxxx"     # 短链直接传, 服务端自动展开转链
+node cli.js start --url "https://www.xiaohongshu.com/explore/6ac86a34000000001801361e?xsec_token=..." --skill-name xhs-comments --ai-entry <ai-entry>
+node cli.js start --url "https://xhslink.com/a/xxxx" --skill-name xhs-comments --ai-entry <ai-entry>     # 短链直接传, 服务端自动展开转链
 ```
 
 - 服务端自动完成：链接解析 → 短链/缺 token 自动转链（免费）→ 互动数采集（免费）→ 建会话。
@@ -151,9 +175,9 @@ node cli.js start --url "https://xhslink.com/a/xxxx"     # 短链直接传, 服�
 ### step — 步进采集（每步 1 点）
 
 ```bash
-node cli.js step --session <id>                              # 采下一页主评论（默认 --page）
-node cli.js step --session <id> --page                       # 同上, 显式写法
-node cli.js step --session <id> --expand --root <主评论id>    # 对指定主评论展开一次子评论
+node cli.js step --session <id> --skill-name xhs-comments --ai-entry <ai-entry>                              # 采下一页主评论（默认 --page）
+node cli.js step --session <id> --page --skill-name xhs-comments --ai-entry <ai-entry>                       # 同上, 显式写法
+node cli.js step --session <id> --expand --root <主评论id> --skill-name xhs-comments --ai-entry <ai-entry>    # 对指定主评论展开一次子评论
 ```
 
 采一页主评论的输出示例：
@@ -182,7 +206,7 @@ node cli.js step --session <id> --expand --root <主评论id>    # 对指定主�
 ### status — 查询会话状态（免费）
 
 ```bash
-node cli.js status --session <id>
+node cli.js status --session <id> --skill-name xhs-comments --ai-entry <ai-entry>
 ```
 
 返回会话状态（active/done/expired/failed）、累计采集量（pages/mains/subs）、已扣费步数、点数余额、互动数。
@@ -190,7 +214,7 @@ node cli.js status --session <id>
 ### comments — 拉取已累计的评论明细（免费）
 
 ```bash
-node cli.js comments --session <id> --page 1 --page-size 100
+node cli.js comments --session <id> --page 1 --page-size 100 --skill-name xhs-comments --ai-entry <ai-entry>
 ```
 
 分页读取本会话已落库的全部评论（含历史，不止增量），适合中途回顾。
@@ -198,7 +222,7 @@ node cli.js comments --session <id> --page 1 --page-size 100
 ### export — 导出累计结果 CSV（免费）
 
 ```bash
-node cli.js export --session <id> --out 评论明细.csv
+node cli.js export --session <id> --out 评论明细.csv --skill-name xhs-comments --ai-entry <ai-entry>
 ```
 
 下载本会话已累计的全部评论 CSV（BOM 头，Excel 直开不乱码）：昵称/内容/点赞数/IP属地/子评论数。
@@ -206,7 +230,7 @@ node cli.js export --session <id> --out 评论明细.csv
 ### finish — 结束会话（免费）
 
 ```bash
-node cli.js finish --session <id>
+node cli.js finish --session <id> --skill-name xhs-comments --ai-entry <ai-entry>
 ```
 
 主动结束会话、释放采集节点（之后该节点可接其它任务）。不 finish 也会在空闲 20 分钟后自动过期。
@@ -214,14 +238,14 @@ node cli.js finish --session <id>
 ### sessions — 列出自己的会话（免费）
 
 ```bash
-node cli.js sessions
-node cli.js sessions --status active --page 1
+node cli.js sessions --skill-name xhs-comments --ai-entry <ai-entry>
+node cli.js sessions --status active --page 1 --skill-name xhs-comments --ai-entry <ai-entry>
 ```
 
 ### logout — 登出（切换账号）
 
 ```bash
-node cli.js logout
+node cli.js logout --skill-name xhs-comments --ai-entry <ai-entry>
 ```
 
 ### config — 配置管理
@@ -233,7 +257,7 @@ node cli.js config show        # token 脱敏显示
 
 ## 典型工作流（agent 照此执行）
 
-1. 拿到用户给的笔记链接后 `node cli.js quota` 确认有余额，然后 `node cli.js start --url "<链接>"`（短链/裸链直接传，自动转链）。
+1. 拿到用户给的笔记链接后 `node cli.js quota --skill-name xhs-comments --ai-entry <ai-entry>` 确认有余额，然后 `node cli.js start --url "<链接>" --skill-name xhs-comments --ai-entry <ai-entry>`（短链/裸链直接传，自动转链）。
 2. 把 `comment_count` 和 `estimated_pages` 报给用户，说明全采预估点数，**等用户确认**。
 3. 循环：`step --session <id>` 采一页 → 展示本页 10 条 → 报告 `has_more_main` 与 `expandable` 列表 → 问用户「继续下一页？展开哪条的子评论？还是结束？」
 4. 用户要子评论：`step --session <id> --expand --root <id>` → 展示本次约 5 条 → `sub_has_more` 为 true 时问是否继续展开。

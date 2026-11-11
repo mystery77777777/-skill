@@ -1,0 +1,10 @@
+{
+  "name": "wx-article-detail",
+  "version": "1.0.0",
+  "private": true,
+  "description": "公众号文章详情采集 Skill CLI (能力 wx_article_detail, 1 点/条)",
+  "main": "cli.js",
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -8,6 +8,12 @@ description: 快手用户主页视频采集工具。当用户提供快手博主�
 
 # 快手用户主页视频采集 Skill（ks-profile）
 
+## AI 调用来源参数（必填）
+
+所有会访问后端 API 的命令必须携带 `--skill-name ks-profile` 和 `--ai-entry <AI工具标识>`（例如 `claude-code`、`codex`、`workbuddy`）。IP 无需传递，由服务端自动获取。首次缺参会告警放行，第二次起拒绝。
+
+示例：`node cli.js quota --skill-name ks-profile --ai-entry claude-code`。
+
 封装「小红书能力平台」（FastAPI，`/api/v1`）的 CLI，供 AI agent 调用。输入**快手用户主页链接 + 页数**，平台调度内网浏览器节点以真人滚动方式打开博主主页，拦截官方作品接口（`/rest/v/profile/feed`，pcursor 翻页）采集该用户的视频列表。
 
 - **能采什么**：主页作品列表的视频明细（`title` 视频文案、`like_count` 点赞、`view_count` 播放量、`author_nickname` 作者昵称、`create_time` 发布时间、`duration_ms` 时长、`cover_url` 封面图、`url` 视频链接；快手 Web feed 不公开评论数/分享数，这两列为空），以及博主 `user_id` / `blogger_nickname`。
@@ -16,6 +22,24 @@ description: 快手用户主页视频采集工具。当用户提供快手博主�
 - **限制**：单任务 1 个博主、1~10 页（约 20 条/页）；`v.kuaishou.com` 短链由节点浏览器打开后自动还原。
 - 采集由**平台调度内网浏览器节点**完成（节点登录态在浏览器端人工维护，平台不持有账号）。
 - 客户端是零依赖 CLI（Node ≥ 18，无需 `npm install`），全部采集逻辑在后端完成。
+
+## 点数不足怎么办（自动扫码充值）
+
+跑命令时如果点数不够，CLI **不会直接报错退出**，而是自己建一张充值单、把二维码打在终端里：
+
+```
+点数不足，已自动创建充值单 RO2611051712281481f36de19
+金额 10.00 元 → 100 点（支付宝）
+<二维码色块>
+[pay] 已支付
+已到账：+100 点，继续执行原命令
+```
+
+- **在终端里跑**：手机支付宝/微信对着终端扫码 → 付完点数自动到账 → 原命令自动重跑，不用手动再来一遍。
+- **AI agent / 非交互环境**（管道、重定向）：CLI 不阻塞等待，而是返回订单号和充值页地址 `{服务地址}/recharge.html`。把链接交给用户，他在网页扫码付款，付完重跑原命令即可（点数会自动到账）。
+- **主动充值**：`node cli.js pay --yuan 50 --skill-name ks-profile --ai-entry <ai-entry>`（不传 `--yuan` 默认 10 元；可加 `--channel alipay` 或 `--channel wechat`）。
+- **不想自动充值**：设环境变量 `XHS_NO_AUTO_PAY=1`，则恢复旧行为（只提示点数不足）。
+- 换算：**1 元 = 10 点**，注册送 10 点。
 
 ## 客服支持
 
@@ -36,15 +60,15 @@ description: 快手用户主页视频采集工具。当用户提供快手博主�
 
 本 skill 是**确认制一次性任务**。请按下面的流程驱动对话：
 
-1. **查余额**：`node cli.js quota` 确认点数充足（余额 < 预扣点数会被 3001 拒绝）。
+1. **查余额**：`node cli.js quota --skill-name ks-profile --ai-entry <ai-entry>` 确认点数充足（余额 < 预扣点数会被 3001 拒绝）。
 2. **报价确认（必须）**：向用户明确以下信息并**等用户确认后**再提交：
    - 主页链接、采集页数（1~10，每页约 20 条）
    - 预估点数：`页数`（例：3 页 → 3 点）
    - 计费规则：**预扣 页数，按实采 ceil(M/20) 结算退差，零头按一页计，零结果/失败/主页不可见全退**
    - **未经用户确认不要执行 collect。**
-3. **提交并等待**：`node cli.js collect --url <主页链接> --pages <N> --wait --timeout 600`。每页滚动约 5-10 秒，属正常，不要中途重试。
+3. **提交并等待**：`node cli.js collect --url <主页链接> --pages <N> --wait --timeout 600 --skill-name ks-profile --ai-entry <ai-entry>`。每页滚动约 5-10 秒，属正常，不要中途重试。
 4. **如实汇报结算**：结果里的 `collected_count`（实采条数）、`settle_charged`（实收点数）、`refunded_diff`（退还差值）必须如实告知用户。
-5. **需要文件时导出**：`node cli.js export <task_id> --wait --out 主页视频.csv`，把 CSV 路径交给用户。
+5. **需要文件时导出**：`node cli.js export <task_id> --wait --out 主页视频.csv --skill-name ks-profile --ai-entry <ai-entry>`，把 CSV 路径交给用户。
 
 **链接说明**：支持 `kuaishou.com/profile/<user_id>` 直链与 `v.kuaishou.com` 短链（短链直接提交，节点浏览器打开后自动还原）；**视频链接不要提交本 skill**（单篇互动数请用 ks-collect，评论请用 ks-comments）。
 
@@ -84,8 +108,8 @@ node cli.js version
 **方式一：扫码/链接注册（唯一方式，用户在手机上完成）**
 
 ```bash
-node cli.js register --link        # 生成注册二维码/链接
-node cli.js register --check --access-token "<上一步下发的串>"   # 用户完成后确认并保存 token
+node cli.js register --link --skill-name ks-profile --ai-entry <ai-entry>        # 生成注册二维码/链接
+node cli.js register --check --access-token "<上一步下发的串>" --skill-name ks-profile --ai-entry <ai-entry>   # 用户完成后确认并保存 token
 ```
 
 `register --link` 的 stdout 返回 `qr_url` / `register_url` / `access_token`。**agent 必须把注册引导原样发给用户**（stderr 里也给出了同样话术，可直接复制）：
@@ -109,8 +133,8 @@ access_token（注册后校验用）：<access_token>
 ### login — 登录
 
 ```bash
-node cli.js login --link
-node cli.js login --check --access-token "<上一步下发的串>"
+node cli.js login --link --skill-name ks-profile --ai-entry <ai-entry>
+node cli.js login --check --access-token "<上一步下发的串>" --skill-name ks-profile --ai-entry <ai-entry>
 ```
 
 引导话术同 register（把"注册"换成"登录"）。成功后 token 自动保存。
@@ -118,7 +142,7 @@ node cli.js login --check --access-token "<上一步下发的串>"
 ### quota — 查询点数
 
 ```bash
-node cli.js quota
+node cli.js quota --skill-name ks-profile --ai-entry <ai-entry>
 ```
 
 ```json
@@ -128,9 +152,9 @@ node cli.js quota
 ### collect — 提交主页采集任务
 
 ```bash
-node cli.js collect --url "https://www.kuaishou.com/profile/3xs28yguwn9xcdc" --pages 3 --wait
-node cli.js collect --url "https://v.kuaishou.com/AbCdEf" --pages 1     # 短链直接提交
-node cli.js collect --url <主页链接> --pages 5 --wait --timeout 600 --force
+node cli.js collect --url "https://www.kuaishou.com/profile/3xs28yguwn9xcdc" --pages 3 --wait --skill-name ks-profile --ai-entry <ai-entry>
+node cli.js collect --url "https://v.kuaishou.com/AbCdEf" --pages 1 --skill-name ks-profile --ai-entry <ai-entry>     # 短链直接提交
+node cli.js collect --url <主页链接> --pages 5 --wait --timeout 600 --force --skill-name ks-profile --ai-entry <ai-entry>
 ```
 
 - `--url`：快手用户主页链接（`kuaishou.com/profile/<user_id>` 或 `v.kuaishou.com` 短链）。
@@ -160,14 +184,14 @@ node cli.js collect --url <主页链接> --pages 5 --wait --timeout 600 --force
 ### query — 查询任务状态与结果
 
 ```bash
-node cli.js query <task_id>            # 单次查询
-node cli.js query <task_id> --wait     # 轮询到终态 (默认 600s 超时)
+node cli.js query <task_id> --skill-name ks-profile --ai-entry <ai-entry>            # 单次查询
+node cli.js query <task_id> --wait --skill-name ks-profile --ai-entry <ai-entry>     # 轮询到终态 (默认 600s 超时)
 ```
 
 ### export — 导出结果 CSV
 
 ```bash
-node cli.js export <task_id> --wait --out 主页视频.csv
+node cli.js export <task_id> --wait --out 主页视频.csv --skill-name ks-profile --ai-entry <ai-entry>
 ```
 
 下载任务结果 CSV（BOM 头，Excel 直开不乱码）：任务汇总（主页/状态/实采数/实收点数/退差点数）+ 视频明细（文案/互动数/作者/发布时间/封面/链接）。导出文件保留 7 天。
@@ -175,7 +199,7 @@ node cli.js export <task_id> --wait --out 主页视频.csv
 ### logout — 登出（切换账号）
 
 ```bash
-node cli.js logout
+node cli.js logout --skill-name ks-profile --ai-entry <ai-entry>
 ```
 
 ### config — 配置管理
@@ -187,11 +211,11 @@ node cli.js config show        # token 脱敏显示
 
 ## 典型工作流（agent 照此执行）
 
-1. 用户说「帮我采集这个快手博主的作品」→ `node cli.js quota` 确认余额。
+1. 用户说「帮我采集这个快手博主的作品」→ `node cli.js quota --skill-name ks-profile --ai-entry <ai-entry>` 确认余额。
 2. 和用户确认主页链接、页数；算出预估点数 `页数`；**明确告知计费规则并等确认**。
-3. `node cli.js collect --url <主页链接> --pages <N> --wait --timeout 600`（不重试）。
+3. `node cli.js collect --url <主页链接> --pages <N> --wait --timeout 600 --skill-name ks-profile --ai-entry <ai-entry>`（不重试）。
 4. 如实汇报：实采条数、实收点数、退差点数；简要展示视频列表（文案/互动数/发布时间）。
-5. 用户要文件 → `node cli.js export <task_id> --wait --out <文件>.csv`，交付路径。
+5. 用户要文件 → `node cli.js export <task_id> --wait --out <文件>.csv --skill-name ks-profile --ai-entry <ai-entry>`，交付路径。
 6. 用户要继续分析 → 可基于视频链接用 ks-collect 补单篇完整互动数或 ks-comments 采评论。
 
 ## 错误处理指引

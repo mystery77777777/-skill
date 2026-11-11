@@ -8,6 +8,12 @@ description: 抖音视频互动数采集工具（社媒指数）。当用户需�
 
 # 抖音互动数采集 Skill（dy-collect）
 
+## AI 调用来源参数（必填）
+
+所有会访问后端 API 的命令必须携带 `--skill-name dy-collect` 和 `--ai-entry <AI工具标识>`（例如 `claude-code`、`codex`、`workbuddy`）。IP 无需传递，由服务端自动获取。首次缺参会告警放行，第二次起拒绝。
+
+示例：`node cli.js quota --skill-name dy-collect --ai-entry claude-code`。
+
 封装「小红书能力平台」（FastAPI，`/api/v1`）的 CLI，供 AI agent 调用：提交抖音视频链接 → 平台调度内网浏览器节点打开视频页拦截官方接口 → 拿到该视频的**点赞 / 评论数 / 收藏 / 分享 / 播放量**等互动指标（社媒指数）。批量采集，结果直接导出 CSV（BOM 头，Excel 直开不乱码）。
 
 - **能采什么**：公开视频的互动指标（`digg_count` 点赞、`comment_count` 评论数、`collect_count` 收藏、`share_count` 分享数、`play_count` 播放量）、视频文案（`title`）与作者昵称、`aweme_id`。
@@ -15,6 +21,24 @@ description: 抖音视频互动数采集工具（社媒指数）。当用户需�
 - **省心机制**：批量采（单次 1~50 条）、无效链接不扣费、服务侧失败按条自动返还点数（详见「计费规则提示」）、Agent 友好（stdout 纯 JSON + 统一退出码）。
 - **不采集评论正文**。需要评论内容请改用评论采集 skill `dy-comments`（会话制，按步计费）。
 - 客户端是零依赖 CLI（Node ≥ 18，无需 `npm install`），全部采集逻辑在后端完成。
+
+## 点数不足怎么办（自动扫码充值）
+
+跑命令时如果点数不够，CLI **不会直接报错退出**，而是自己建一张充值单、把二维码打在终端里：
+
+```
+点数不足，已自动创建充值单 RO2611051712281481f36de19
+金额 10.00 元 → 100 点（支付宝）
+<二维码色块>
+[pay] 已支付
+已到账：+100 点，继续执行原命令
+```
+
+- **在终端里跑**：手机支付宝/微信对着终端扫码 → 付完点数自动到账 → 原命令自动重跑，不用手动再来一遍。
+- **AI agent / 非交互环境**（管道、重定向）：CLI 不阻塞等待，而是返回订单号和充值页地址 `{服务地址}/recharge.html`。把链接交给用户，他在网页扫码付款，付完重跑原命令即可（点数会自动到账）。
+- **主动充值**：`node cli.js pay --yuan 50 --skill-name dy-collect --ai-entry <ai-entry>`（不传 `--yuan` 默认 10 元；可加 `--channel alipay` 或 `--channel wechat`）。
+- **不想自动充值**：设环境变量 `XHS_NO_AUTO_PAY=1`，则恢复旧行为（只提示点数不足）。
+- 换算：**1 元 = 10 点**，注册送 10 点。
 
 ## 客服支持
 
@@ -82,8 +106,8 @@ node cli.js version
 **方式一：扫码/链接注册（唯一方式，用户在手机上完成）**
 
 ```bash
-node cli.js register --link        # 生成注册二维码/链接
-node cli.js register --check --access-token "<上一步下发的串>"   # 用户完成后确认并保存 token
+node cli.js register --link --skill-name dy-collect --ai-entry <ai-entry>        # 生成注册二维码/链接
+node cli.js register --check --access-token "<上一步下发的串>" --skill-name dy-collect --ai-entry <ai-entry>   # 用户完成后确认并保存 token
 ```
 
 `register --link` 的 stdout 返回 `qr_url` / `register_url` / `access_token`。**agent 必须把注册引导原样发给用户**（stderr 里也给出了同样话术，可直接复制）：
@@ -107,8 +131,8 @@ access_token（注册后校验用）：<access_token>
 ### login — 登录
 
 ```bash
-node cli.js login --link
-node cli.js login --check --access-token "<上一步下发的串>"
+node cli.js login --link --skill-name dy-collect --ai-entry <ai-entry>
+node cli.js login --check --access-token "<上一步下发的串>" --skill-name dy-collect --ai-entry <ai-entry>
 ```
 
 引导话术同 register（把"注册"换成"登录"）。成功后 token 自动保存。
@@ -116,7 +140,7 @@ node cli.js login --check --access-token "<上一步下发的串>"
 ### quota — 查询点数
 
 ```bash
-node cli.js quota
+node cli.js quota --skill-name dy-collect --ai-entry <ai-entry>
 ```
 
 ```json
@@ -126,17 +150,17 @@ node cli.js quota
 ### logout — 登出（切换账号）
 
 ```bash
-node cli.js logout
+node cli.js logout --skill-name dy-collect --ai-entry <ai-entry>
 ```
 
 ### submit — 提交采集任务
 
 ```bash
-node cli.js submit --url "https://www.douyin.com/video/7312345678901234567" \
+node cli.js submit --url "https://www.douyin.com/video/7312345678901234567" --skill-name dy-collect --ai-entry <ai-entry> \
                    --url "https://v.douyin.com/iAbCdEf/"
-node cli.js submit --file urls.txt            # 每行一条视频链接, 忽略空行与 # 注释行
-node cli.js submit --file urls.txt --wait     # 提交后轮询等待终态（推荐）
-node cli.js submit --url <链接> --force       # 跳过 24h 内容去重强制重提
+node cli.js submit --file urls.txt --skill-name dy-collect --ai-entry <ai-entry>            # 每行一条视频链接, 忽略空行与 # 注释行
+node cli.js submit --file urls.txt --wait --skill-name dy-collect --ai-entry <ai-entry>     # 提交后轮询等待终态（推荐）
+node cli.js submit --url <链接> --force --skill-name dy-collect --ai-entry <ai-entry>       # 跳过 24h 内容去重强制重提
 ```
 
 - `--url` 可重复；`--file` 按行读取；二者可混合；总数 1~50 条。
@@ -154,9 +178,9 @@ node cli.js submit --url <链接> --force       # 跳过 24h 内容去重强制�
 ### query — 查询任务 / 拉取结果
 
 ```bash
-node cli.js query <task_id>                          # 查一次
-node cli.js query <task_id> --wait                   # 轮询直到终态
-node cli.js query <task_id> --wait --interval 3 --timeout 300
+node cli.js query <task_id> --skill-name dy-collect --ai-entry <ai-entry>                          # 查一次
+node cli.js query <task_id> --wait --skill-name dy-collect --ai-entry <ai-entry>                   # 轮询直到终态
+node cli.js query <task_id> --wait --interval 3 --timeout 300 --skill-name dy-collect --ai-entry <ai-entry>
 ```
 
 - `--interval` 轮询间隔秒数（默认 2），`--timeout` 总超时秒数。
@@ -179,7 +203,7 @@ node cli.js query <task_id> --wait --interval 3 --timeout 300
 ### export — 导出 CSV
 
 ```bash
-node cli.js export <task_id> --wait --out out.csv
+node cli.js export <task_id> --wait --out out.csv --skill-name dy-collect --ai-entry <ai-entry>
 ```
 
 生成两段式 CSV（BOM 头，Excel 直开不乱码）：任务汇总 + 视频明细（文案/互动数/作者）。适合把结果直接交给用户。
@@ -194,10 +218,10 @@ node cli.js config show        # token 脱敏显示
 ## 典型工作流（agent 照此执行）
 
 1. 检查每条视频链接形态（直链/短链均可直接提交；主页链接引导改用 `dy-profile`）。
-2. `node cli.js quota` — 确认剩余点数 ≥ 待采集条数。
-3. `node cli.js submit --url <链接1> --url <链接2> ... --wait` — 一步拿到终态结果（条数多时用 `--file`）。
+2. `node cli.js quota --skill-name dy-collect --ai-entry <ai-entry>` — 确认剩余点数 ≥ 待采集条数。
+3. `node cli.js submit --url <链接1> --url <链接2> ... --wait --skill-name dy-collect --ai-entry <ai-entry>` — 一步拿到终态结果（条数多时用 `--file`）。
 4. 解析 stdout JSON：遍历 `data.items`，把 `status==="success"` 条目的 `result` 五指标整理成表格返回给用户；`failed`/`invalid` 条目附 `fail_reason` 说明。
-5. 用户要文件时：`node cli.js export <task_id> --wait --out 社媒指数.csv`，把 CSV 路径交给用户。
+5. 用户要文件时：`node cli.js export <task_id> --wait --out 社媒指数.csv --skill-name dy-collect --ai-entry <ai-entry>`，把 CSV 路径交给用户。
 
 ## 错误处理指引
 

@@ -8,6 +8,12 @@ description: 抖音视频评论采集工具（分步会话）。当用户需要�
 
 # 抖音评论采集 Skill（dy-comments）
 
+## AI 调用来源参数（必填）
+
+所有会访问后端 API 的命令必须携带 `--skill-name dy-comments` 和 `--ai-entry <AI工具标识>`（例如 `claude-code`、`codex`、`workbuddy`）。IP 无需传递，由服务端自动获取。首次缺参会告警放行，第二次起拒绝。
+
+示例：`node cli.js quota --skill-name dy-comments --ai-entry claude-code`。
+
 **产品定位**：输入抖音视频链接 → 平台调度内网浏览器节点打开该视频页并持续滚动评论区 → 抓取评论（含回复）→ 结果实时分步返回、可 CSV 导出。
 
 **会话制 v2（本 skill 核心特性，2026-10-15 起）**：评论采集与小红书系列一致采用「分步会话」模式（2026-10-10 起的小红书同款协议）——
@@ -22,6 +28,24 @@ description: 抖音视频评论采集工具（分步会话）。当用户需要�
 - 客户端是零依赖 CLI（Node ≥ 18，无需 `npm install`），全部采集逻辑在后端完成。
 - 采集由**平台调度内网浏览器节点**完成（节点登录态在浏览器端人工维护，平台不持有账号）。
 - 导出 CSV 自带 BOM 头，Excel 直开不乱码。
+
+## 点数不足怎么办（自动扫码充值）
+
+跑命令时如果点数不够，CLI **不会直接报错退出**，而是自己建一张充值单、把二维码打在终端里：
+
+```
+点数不足，已自动创建充值单 RO2611051712281481f36de19
+金额 10.00 元 → 100 点（支付宝）
+<二维码色块>
+[pay] 已支付
+已到账：+100 点，继续执行原命令
+```
+
+- **在终端里跑**：手机支付宝/微信对着终端扫码 → 付完点数自动到账 → 原命令自动重跑，不用手动再来一遍。
+- **AI agent / 非交互环境**（管道、重定向）：CLI 不阻塞等待，而是返回订单号和充值页地址 `{服务地址}/recharge.html`。把链接交给用户，他在网页扫码付款，付完重跑原命令即可（点数会自动到账）。
+- **主动充值**：`node cli.js pay --yuan 50 --skill-name dy-comments --ai-entry <ai-entry>`（不传 `--yuan` 默认 10 元；可加 `--channel alipay` 或 `--channel wechat`）。
+- **不想自动充值**：设环境变量 `XHS_NO_AUTO_PAY=1`，则恢复旧行为（只提示点数不足）。
+- 换算：**1 元 = 10 点**，注册送 10 点。
 
 ## 客服支持
 
@@ -51,11 +75,11 @@ description: 抖音视频评论采集工具（分步会话）。当用户需要�
 
 ### 流程
 
-1. **查余额**：`node cli.js quota` 确认点数充足（余额 < 1 无法 step）。
-2. **建立会话（免费）**：`node cli.js start --url <视频链接>` → 返回 `session_id`、视频文案、评论总数（`metrics.comment_count`）、预估页数（`estimated_pages`）。
+1. **查余额**：`node cli.js quota --skill-name dy-comments --ai-entry <ai-entry>` 确认点数充足（余额 < 1 无法 step）。
+2. **建立会话（免费）**：`node cli.js start --url <视频链接> --skill-name dy-comments --ai-entry <ai-entry>` → 返回 `session_id`、视频文案、评论总数（`metrics.comment_count`）、预估页数（`estimated_pages`）。
 3. **报价确认（必须）**：把评论总数和预估页数告诉用户，算好预估点数（每页主评论 1 点 + 展开回复每次 1 点），**等用户确认后再开始 step**：
    - 例：`预估 N 页 × 1 点/页 = N 点；如需展开某条评论的更多回复，每次展开 1 点。`
-4. **逐步采集**：`node cli.js step --session <id> --page` 采下一页主评论。**每步返回后**：
+4. **逐步采集**：`node cli.js step --session <id> --page --skill-name dy-comments --ai-entry <ai-entry>` 采下一页主评论。**每步返回后**：
    - 把本页新增评论（昵称/内容/时间/点赞/IP属地）**展示给用户**；
    - 若返回 `expandable` 列表（可展开回复的主评论），告知用户：`以下 X 条评论有更多回复，是否展开？每次展开 1 点`，由用户决定（**不要擅自展开**）；
    - **每步都要询问用户是否继续采下一页**（`has_more_main` 提示是否还有下一页）。
@@ -112,8 +136,8 @@ node cli.js version
 **方式一：扫码/链接注册（唯一方式，用户在手机上完成）**
 
 ```bash
-node cli.js register --link        # 生成注册二维码/链接
-node cli.js register --check --access-token "<上一步下发的串>"   # 用户完成后确认并保存 token
+node cli.js register --link --skill-name dy-comments --ai-entry <ai-entry>        # 生成注册二维码/链接
+node cli.js register --check --access-token "<上一步下发的串>" --skill-name dy-comments --ai-entry <ai-entry>   # 用户完成后确认并保存 token
 ```
 
 `register --link` 的 stdout 返回 `qr_url` / `register_url` / `access_token`。**agent 必须把注册引导原样发给用户**（stderr 里也给出了同样话术，可直接复制）：
@@ -137,8 +161,8 @@ access_token（注册后校验用）：<access_token>
 ### login — 登录
 
 ```bash
-node cli.js login --link
-node cli.js login --check --access-token "<上一步下发的串>"
+node cli.js login --link --skill-name dy-comments --ai-entry <ai-entry>
+node cli.js login --check --access-token "<上一步下发的串>" --skill-name dy-comments --ai-entry <ai-entry>
 ```
 
 引导话术同 register（把"注册"换成"登录"）。成功后 token 自动保存。
@@ -146,7 +170,7 @@ node cli.js login --check --access-token "<上一步下发的串>"
 ### quota — 查询点数
 
 ```bash
-node cli.js quota
+node cli.js quota --skill-name dy-comments --ai-entry <ai-entry>
 ```
 
 ```json
@@ -156,8 +180,8 @@ node cli.js quota
 ### start — 建立会话（免费）
 
 ```bash
-node cli.js start --url "https://www.douyin.com/video/7312345678901234567"
-node cli.js start --url "https://v.douyin.com/iAbCdEf/"     # 短链直接提交, 节点自动还原
+node cli.js start --url "https://www.douyin.com/video/7312345678901234567" --skill-name dy-comments --ai-entry <ai-entry>
+node cli.js start --url "https://v.douyin.com/iAbCdEf/" --skill-name dy-comments --ai-entry <ai-entry>     # 短链直接提交, 节点自动还原
 ```
 
 输出示例：
@@ -183,8 +207,8 @@ node cli.js start --url "https://v.douyin.com/iAbCdEf/"     # 短链直接提交
 ### step — 采集一步（扣 1 点）
 
 ```bash
-node cli.js step --session <session_id> --page                          # 采下一页主评论
-node cli.js step --session <session_id> --expand --root <主评论cid>      # 展开指定主评论的回复
+node cli.js step --session <session_id> --page --skill-name dy-comments --ai-entry <ai-entry>                          # 采下一页主评论
+node cli.js step --session <session_id> --expand --root <主评论cid> --skill-name dy-comments --ai-entry <ai-entry>      # 展开指定主评论的回复
 ```
 
 `step --page` 返回示例（字段与 xhs-comments 平行，`expandable` 用 cid）：
@@ -235,7 +259,7 @@ node cli.js step --session <session_id> --expand --root <主评论cid>      # �
 ### status — 查询会话状态（免费）
 
 ```bash
-node cli.js status --session <session_id>
+node cli.js status --session <session_id> --skill-name dy-comments --ai-entry <ai-entry>
 ```
 
 返回会话状态（active/expired/finished）、视频信息、累计采集量（`mains_collected`/`subs_collected`）、`quota_balance`。
@@ -243,8 +267,8 @@ node cli.js status --session <session_id>
 ### comments — 拉取累计评论明细（免费）
 
 ```bash
-node cli.js comments --session <session_id>                    # 默认第 1 页, 100 条/页
-node cli.js comments --session <session_id> --page 2 --page-size 50
+node cli.js comments --session <session_id> --skill-name dy-comments --ai-entry <ai-entry>                    # 默认第 1 页, 100 条/页
+node cli.js comments --session <session_id> --page 2 --page-size 50 --skill-name dy-comments --ai-entry <ai-entry>
 ```
 
 返回该会话**累计**采集的全部评论（主评论+子评论，分页），落库数据，会话过期后依然可查。字段含 `comment_id`、`nickname`、`content`、`create_time`、`like_count`、`ip_location`、`sub_comment_count`、`reply_nickname`。
@@ -252,7 +276,7 @@ node cli.js comments --session <session_id> --page 2 --page-size 50
 ### export — 导出会话结果 CSV（免费）
 
 ```bash
-node cli.js export --session <session_id> --out 评论导出.csv
+node cli.js export --session <session_id> --out 评论导出.csv --skill-name dy-comments --ai-entry <ai-entry>
 ```
 
 下载该会话累计评论 CSV（BOM 头，Excel 直开不乱码），列含评论 ID、昵称、IP 属地、内容、时间、点赞数、回复对象等。**含已过期会话**——只要 session_id 在，随时可导出。
@@ -260,7 +284,7 @@ node cli.js export --session <session_id> --out 评论导出.csv
 ### finish — 结束会话（免费）
 
 ```bash
-node cli.js finish --session <session_id>
+node cli.js finish --session <session_id> --skill-name dy-comments --ai-entry <ai-entry>
 ```
 
 主动结束会话、立即释放采集节点。返回 `status: "finished"`。
@@ -268,8 +292,8 @@ node cli.js finish --session <session_id>
 ### sessions — 列出自己的会话（免费）
 
 ```bash
-node cli.js sessions                    # 全部会话
-node cli.js sessions --status active    # 只看进行中
+node cli.js sessions --skill-name dy-comments --ai-entry <ai-entry>                    # 全部会话
+node cli.js sessions --status active --skill-name dy-comments --ai-entry <ai-entry>    # 只看进行中
 ```
 
 分页列出当前用户的历史会话（`session_id`、视频链接、状态、累计采集量、创建时间）。
@@ -277,7 +301,7 @@ node cli.js sessions --status active    # 只看进行中
 ### logout — 登出（切换账号）
 
 ```bash
-node cli.js logout
+node cli.js logout --skill-name dy-comments --ai-entry <ai-entry>
 ```
 
 ### config — 配置管理
@@ -292,16 +316,16 @@ node cli.js config show        # token 脱敏显示
 用户：**帮我采集这个抖音视频的评论 https://v.douyin.com/iAbCdEf/**
 
 1. **检查链接**：`v.douyin.com` 短链直接可提交（节点自动还原），不需要人工转换。
-2. **登录检查**：`node cli.js quota` → 未登录则引导 `login --link`（或注册 `register --link` 送 10 点数）。
-3. **建立会话（免费）**：`node cli.js start --url "https://v.douyin.com/iAbCdEf/"`。
+2. **登录检查**：`node cli.js quota --skill-name dy-comments --ai-entry <ai-entry>` → 未登录则引导 `login --link`（或注册 `register --link` 送 10 点数）。
+3. **建立会话（免费）**：`node cli.js start --url "https://v.douyin.com/iAbCdEf/" --skill-name dy-comments --ai-entry <ai-entry>`。
 4. **报价确认**：把 `comment_count`（评论总数）与 `estimated_pages`（预估页数）报给用户：
    - 例：`这个视频共 156 条评论，预估 8 页主评论，每页 1 点，共约 8 点（如需展开某条评论的更多回复，每次展开额外 1 点）。是否开始采集？`
    - **用户确认后才继续**；余额不足先引导充值。
-5. **采集第一页**：`node cli.js step --session <sid> --page`。
+5. **采集第一页**：`node cli.js step --session <sid> --page --skill-name dy-comments --ai-entry <ai-entry>`。
 6. **展示 + 询问**：把本页评论摘要（昵称/内容/点赞/IP属地）展示给用户；若有 `expandable` 告知「以下评论有更多回复，是否展开（每次 1 点）」；问「是否继续采下一页？」。
 7. **循环 step**：用户确认继续 → 再采下一页，直到用户喊停 / `has_more_main: false` / 点数不足。
-8. **收尾**：用户不再继续 → `node cli.js finish --session <sid>` 释放节点（数据已落库）。
-9. **交付**：`node cli.js export --session <sid> --out <视频文案或日期>.csv` → 把 CSV 路径交给用户。
+8. **收尾**：用户不再继续 → `node cli.js finish --session <sid> --skill-name dy-comments --ai-entry <ai-entry>` 释放节点（数据已落库）。
+9. **交付**：`node cli.js export --session <sid> --out <视频文案或日期>.csv --skill-name dy-comments --ai-entry <ai-entry>` → 把 CSV 路径交给用户。
 10. 用户要求分析评论（舆情/口碑/关键词统计）→ 可基于导出 CSV 或 `comments` 明细直接分析，无需重新采集。
 
 ## 错误处理指引

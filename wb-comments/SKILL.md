@@ -8,12 +8,36 @@ description: 微博评论采集工具（分步会话）。当用户需要采集�
 
 # 微博评论采集 Skill（wb-comments，会话制）
 
+## AI 调用来源参数（必填）
+
+所有会访问后端 API 的命令必须携带 `--skill-name wb-comments` 和 `--ai-entry <AI工具标识>`（例如 `claude-code`、`codex`、`workbuddy`）。IP 无需传递，由服务端自动获取。首次缺参会告警放行，第二次起拒绝。
+
+示例：`node cli.js quota --skill-name wb-comments --ai-entry claude-code`。
+
 封装「小红书能力平台」（FastAPI，`/api/v1`）的 CLI，供 AI agent 调用：**分步会话制**采集微博评论。先 `start`（免费探测微博正文与评论总数），再按页采主评论、按需展开某条主评论的二级回复 —— 每一步都返回增量结果，由 agent 决定是否继续。全部评论可导出 CSV（BOM 头，Excel 直开不乱码）。
 
 - **能采什么**：主评论与二级回复的发布者昵称（`nickname`）、作者 ID、评论正文（`text`，表情会还原成 `[允悲]` 这类文案）、点赞数（`digg_count`）、发布时间（`create_time`）、二级回复的**回复对象昵称**（`reply_to_nickname`）、评论 ID（`cid`）与根评论 ID（`root_cid`）。
 - **为什么是会话制**：评论量往往很大（几百到几千条），一次采完既贵又慢。会话制让你先看到评论总数、按页推进、只对"回复多"的主评论展开，把钱花在刀刃上。
 - **计费**：`start` 建会话**免费**；之后**每步 1 点数**（采一页主评论 = 1 步，展开一次回复 = 1 步）；**某一步一条都没采到时不扣费**（已是最后一页/回复已展开完/本次无新增）。
 - 客户端是零依赖 CLI（Node ≥ 18，无需 `npm install`），全部采集逻辑在后端完成。
+
+## 点数不足怎么办（自动扫码充值）
+
+跑命令时如果点数不够，CLI **不会直接报错退出**，而是自己建一张充值单、把二维码打在终端里：
+
+```
+点数不足，已自动创建充值单 RO2611051712281481f36de19
+金额 10.00 元 → 100 点（支付宝）
+<二维码色块>
+[pay] 已支付
+已到账：+100 点，继续执行原命令
+```
+
+- **在终端里跑**：手机支付宝/微信对着终端扫码 → 付完点数自动到账 → 原命令自动重跑，不用手动再来一遍。
+- **AI agent / 非交互环境**（管道、重定向）：CLI 不阻塞等待，而是返回订单号和充值页地址 `{服务地址}/recharge.html`。把链接交给用户，他在网页扫码付款，付完重跑原命令即可（点数会自动到账）。
+- **主动充值**：`node cli.js pay --yuan 50 --skill-name wb-comments --ai-entry <ai-entry>`（不传 `--yuan` 默认 10 元；可加 `--channel alipay` 或 `--channel wechat`）。
+- **不想自动充值**：设环境变量 `XHS_NO_AUTO_PAY=1`，则恢复旧行为（只提示点数不足）。
+- 换算：**1 元 = 10 点**，注册送 10 点。
 
 ## 客服支持
 
@@ -73,19 +97,19 @@ node cli.js version
 与 `wb-collect` skill 完全一致（同一账号体系、同一配置文件）：
 
 ```bash
-node cli.js register --link
-node cli.js register --check --access-token "<串>"
-node cli.js login --link
-node cli.js login --check --access-token "<串>"
-node cli.js quota
-node cli.js logout
+node cli.js register --link --skill-name wb-comments --ai-entry <ai-entry>
+node cli.js register --check --access-token "<串>" --skill-name wb-comments --ai-entry <ai-entry>
+node cli.js login --link --skill-name wb-comments --ai-entry <ai-entry>
+node cli.js login --check --access-token "<串>" --skill-name wb-comments --ai-entry <ai-entry>
+node cli.js quota --skill-name wb-comments --ai-entry <ai-entry>
+node cli.js logout --skill-name wb-comments --ai-entry <ai-entry>
 node cli.js config show
 ```
 
 ### start — 建立采集会话（免费）
 
 ```bash
-node cli.js start --url "https://weibo.com/2153789604/RoCNr3H8I"
+node cli.js start --url "https://weibo.com/2153789604/RoCNr3H8I" --skill-name wb-comments --ai-entry <ai-entry>
 ```
 
 节点打开微博探测正文与评论总数，**不扣费**。stderr 会提示「请把评论数和预估页数告知用户，确认后再执行 step 开始计费」——**agent 必须先向用户报数并征得同意再 step**。
@@ -102,8 +126,8 @@ node cli.js start --url "https://weibo.com/2153789604/RoCNr3H8I"
 ### step — 采集一步（每步 1 点数）
 
 ```bash
-node cli.js step --session <session_id>                       # 采下一页主评论（每页 20 条）
-node cli.js step --session <session_id> --expand --root <cid>  # 展开某条主评论的下一页回复
+node cli.js step --session <session_id> --skill-name wb-comments --ai-entry <ai-entry>                       # 采下一页主评论（每页 20 条）
+node cli.js step --session <session_id> --expand --root <cid> --skill-name wb-comments --ai-entry <ai-entry>  # 展开某条主评论的下一页回复
 ```
 
 - 采主评论：返回本页新增的主评论（含随页带回的少量二级回复）与本页「可展开回复」的主评论列表（`expandable`，带 `sub_count` 与已采数）。
@@ -113,13 +137,13 @@ node cli.js step --session <session_id> --expand --root <cid>  # 展开某条主
 ### status — 查看会话状态（免费）
 
 ```bash
-node cli.js status --session <session_id>
+node cli.js status --session <session_id> --skill-name wb-comments --ai-entry <ai-entry>
 ```
 
 ### comments — 拉取会话已累计的全部评论（免费）
 
 ```bash
-node cli.js comments --session <session_id> [--page 1] [--page-size 100]
+node cli.js comments --session <session_id> [--page 1] [--page-size 100] --skill-name wb-comments --ai-entry <ai-entry>
 ```
 
 断点续看/全量拉取用，不额外扣费。
@@ -127,7 +151,7 @@ node cli.js comments --session <session_id> [--page 1] [--page-size 100]
 ### finish — 结束会话（释放节点）
 
 ```bash
-node cli.js finish --session <session_id>
+node cli.js finish --session <session_id> --skill-name wb-comments --ai-entry <ai-entry>
 ```
 
 采完请务必执行，释放采集节点标签页（会话也会在长时间无操作后自动过期释放）。
@@ -135,26 +159,26 @@ node cli.js finish --session <session_id>
 ### sessions — 列出自己的会话
 
 ```bash
-node cli.js sessions [--page 1] [--status active]
+node cli.js sessions [--page 1] [--status active] --skill-name wb-comments --ai-entry <ai-entry>
 ```
 
 ### export — 导出评论 CSV
 
 ```bash
-node cli.js export --session <session_id> --out 评论.csv
+node cli.js export --session <session_id> --out 评论.csv --skill-name wb-comments --ai-entry <ai-entry>
 ```
 
 导出该会话累计的全部评论（含二级回复与回复对象），BOM 头，Excel 直开不乱码。
 
 ## 典型工作流（agent 照此执行）
 
-1. `node cli.js start --url <微博链接>`（免费）。
+1. `node cli.js start --url <微博链接> --skill-name wb-comments --ai-entry <ai-entry>`（免费）。
 2. **把评论总数与预估页数报给用户，问要不要继续、大约采多少**——这一步必须做，不能自作主张一路采到底。
-3. 用户同意后：`node cli.js step --session <sid>` 采一页主评论（1 点）；把本页评论整理给用户看。
-4. 若 `expandable` 里有用户感兴趣的主评论（回复数多的），**问用户**要不要展开；同意后 `node cli.js step --session <sid> --expand --root <cid>`（1 点）。
+3. 用户同意后：`node cli.js step --session <sid> --skill-name wb-comments --ai-entry <ai-entry>` 采一页主评论（1 点）；把本页评论整理给用户看。
+4. 若 `expandable` 里有用户感兴趣的主评论（回复数多的），**问用户**要不要展开；同意后 `node cli.js step --session <sid> --expand --root <cid> --skill-name wb-comments --ai-entry <ai-entry>`（1 点）。
 5. 重复 3/4 直到 `no_more` 或用户喊停。
-6. `node cli.js export --session <sid> --out <文件名>.csv` 交付文件。
-7. 收尾 `node cli.js finish --session <sid>`。
+6. `node cli.js export --session <sid> --out <文件名>.csv --skill-name wb-comments --ai-entry <ai-entry>` 交付文件。
+7. 收尾 `node cli.js finish --session <sid> --skill-name wb-comments --ai-entry <ai-entry>`。
 
 **每一步都要先问再做**：这是会话制的核心纪律，也是帮用户省点数的关键。
 

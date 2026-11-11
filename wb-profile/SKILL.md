@@ -8,12 +8,36 @@ description: 微博用户主页采集工具。当用户提供微博博主主页�
 
 # 微博用户主页采集 Skill（wb-profile）
 
+## AI 调用来源参数（必填）
+
+所有会访问后端 API 的命令必须携带 `--skill-name wb-profile` 和 `--ai-entry <AI工具标识>`（例如 `claude-code`、`codex`、`workbuddy`）。IP 无需传递，由服务端自动获取。首次缺参会告警放行，第二次起拒绝。
+
+示例：`node cli.js quota --skill-name wb-profile --ai-entry claude-code`。
+
 封装「小红书能力平台」（FastAPI，`/api/v1`）的 CLI，供 AI agent 调用：提交微博用户主页链接 + 页数 → 平台调度内网浏览器节点调用 `/ajax/statuses/mymblog`（按 `since_id` 游标翻页）→ 拿到该博主主页的微博列表。**原创与转发都会采集，并保留转发关系**（`is_repost` 及原微博 ID/作者/正文）。结果可直接导出 CSV（BOM 头，Excel 直开不乱码）。
 
 - **能采什么**：微博正文、发布时间、转发数/评论数/点赞数、微博 ID（`post_id`）与 bid、原帖链接；转发微博额外带 `reposted_post_id` / `reposted_author_nickname` / `reposted_text`。
 - **适用场景**：达人筛选、博主内容盘点、竞品账号监测、KOL 背调等。
 - **省心机制**：预扣按页数、结算按实采量退差、零结果/失败全额返还、Agent 友好（stdout 纯 JSON + 统一退出码）。
 - 客户端是零依赖 CLI（Node ≥ 18，无需 `npm install`），全部采集逻辑在后端完成。
+
+## 点数不足怎么办（自动扫码充值）
+
+跑命令时如果点数不够，CLI **不会直接报错退出**，而是自己建一张充值单、把二维码打在终端里：
+
+```
+点数不足，已自动创建充值单 RO2611051712281481f36de19
+金额 10.00 元 → 100 点（支付宝）
+<二维码色块>
+[pay] 已支付
+已到账：+100 点，继续执行原命令
+```
+
+- **在终端里跑**：手机支付宝/微信对着终端扫码 → 付完点数自动到账 → 原命令自动重跑，不用手动再来一遍。
+- **AI agent / 非交互环境**（管道、重定向）：CLI 不阻塞等待，而是返回订单号和充值页地址 `{服务地址}/recharge.html`。把链接交给用户，他在网页扫码付款，付完重跑原命令即可（点数会自动到账）。
+- **主动充值**：`node cli.js pay --yuan 50 --skill-name wb-profile --ai-entry <ai-entry>`（不传 `--yuan` 默认 10 元；可加 `--channel alipay` 或 `--channel wechat`）。
+- **不想自动充值**：设环境变量 `XHS_NO_AUTO_PAY=1`，则恢复旧行为（只提示点数不足）。
+- 换算：**1 元 = 10 点**，注册送 10 点。
 
 ## 客服支持
 
@@ -75,12 +99,12 @@ node cli.js version
 与 `wb-collect` skill 完全一致（同一账号体系、同一配置文件）：
 
 ```bash
-node cli.js register --link
-node cli.js register --check --access-token "<串>"
-node cli.js login --link
-node cli.js login --check --access-token "<串>"
-node cli.js quota
-node cli.js logout
+node cli.js register --link --skill-name wb-profile --ai-entry <ai-entry>
+node cli.js register --check --access-token "<串>" --skill-name wb-profile --ai-entry <ai-entry>
+node cli.js login --link --skill-name wb-profile --ai-entry <ai-entry>
+node cli.js login --check --access-token "<串>" --skill-name wb-profile --ai-entry <ai-entry>
+node cli.js quota --skill-name wb-profile --ai-entry <ai-entry>
+node cli.js logout --skill-name wb-profile --ai-entry <ai-entry>
 node cli.js config set base-url http://127.0.0.1:8084
 node cli.js config show
 ```
@@ -88,9 +112,9 @@ node cli.js config show
 ### collect — 提交主页采集任务
 
 ```bash
-node cli.js collect --url "https://weibo.com/u/2062260913"
-node cli.js collect --url "https://weibo.com/u/2062260913" --pages 3 --wait
-node cli.js collect --url "https://weibo.com/u/2062260913" --force   # 跳过 24h 去重
+node cli.js collect --url "https://weibo.com/u/2062260913" --skill-name wb-profile --ai-entry <ai-entry>
+node cli.js collect --url "https://weibo.com/u/2062260913" --pages 3 --wait --skill-name wb-profile --ai-entry <ai-entry>
+node cli.js collect --url "https://weibo.com/u/2062260913" --force --skill-name wb-profile --ai-entry <ai-entry>   # 跳过 24h 去重
 ```
 
 - `--pages` 1~10（默认 1），每页约 20 条。
@@ -106,7 +130,7 @@ node cli.js collect --url "https://weibo.com/u/2062260913" --force   # 跳过 24
 ### query — 查询任务 / 拉取结果
 
 ```bash
-node cli.js query <task_id> [--wait] [--interval 秒] [--timeout 秒]
+node cli.js query <task_id> [--wait] [--interval 秒] [--timeout 秒] --skill-name wb-profile --ai-entry <ai-entry>
 ```
 
 终态输出示例：
@@ -132,7 +156,7 @@ node cli.js query <task_id> [--wait] [--interval 秒] [--timeout 秒]
 ### export — 导出 CSV
 
 ```bash
-node cli.js export <task_id> --wait --out 博主微博.csv
+node cli.js export <task_id> --wait --out 博主微博.csv --skill-name wb-profile --ai-entry <ai-entry>
 ```
 
 两段式 CSV（BOM 头）：任务汇总 + 微博明细（正文/转发·评论·点赞/时间/链接/转发关系）。
@@ -140,10 +164,10 @@ node cli.js export <task_id> --wait --out 博主微博.csv
 ## 典型工作流（agent 照此执行）
 
 1. 确认链接是主页形态（`/u/<用户ID>`、`/profile/<用户ID>`、裸 `/<用户ID>` 或 `t.cn` 短链）。
-2. `node cli.js quota` — 确认点数够（一页 1 点）。
-3. `node cli.js collect --url <主页链接> [--pages N] --wait`。
+2. `node cli.js quota --skill-name wb-profile --ai-entry <ai-entry>` — 确认点数够（一页 1 点）。
+3. `node cli.js collect --url <主页链接> [--pages N] --wait --skill-name wb-profile --ai-entry <ai-entry>`。
 4. 解析 stdout JSON，把 `result.videos` 整理成表格；按 `collected_count` / `settle_charged` 如实汇报。
-5. 用户要文件时 `node cli.js export <task_id> --wait --out <文件名>.csv`。
+5. 用户要文件时 `node cli.js export <task_id> --wait --out <文件名>.csv --skill-name wb-profile --ai-entry <ai-entry>`。
 
 ## 错误处理指引
 

@@ -4,15 +4,16 @@
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-const { ApiClient, BizError, allowInsecureTls } = require('./src/client');
+const { ApiClient, BizError, allowInsecureTls, skillHeaders, warnSkillResponse } = require('./src/client');
 const { loadConfig, saveConfig, resolveConfig, maskToken, configPaths, DEFAULT_BASE_URL } = require('./src/config');
 const { UsageError, printOk, printFail, exitWithError, pollTask, parsePositiveNumber } = require('./src/output');
+const { handleFatal } = require('./src/pay');
 
 const CAPABILITY = 'wb_hot';
 const VERSION = '1.0.0';
 const DEFAULT_PRICE = 1;
 const DOWNLOAD_TIMEOUT_MS = 60000;
-const VALUE_FLAGS = new Set(['interval', 'timeout', 'token', 'base-url', 'access-token', 'out']);
+const VALUE_FLAGS = new Set(['yuan', 'channel', 'interval', 'timeout', 'token', 'base-url', 'access-token', 'out', 'skill-name', 'ai-entry']);
 const BOOL_FLAGS = new Set(['wait', 'help', 'link', 'check', 'force', 'version']);
 
 function camel(s) { return s.replace(/-([a-z])/g, (_, c) => c.toUpperCase()); }
@@ -54,6 +55,7 @@ const USAGE = `微博热榜采集 CLI（服务端直接 HTTP 采集，无需微�
   export <task_id> [--wait] [--out <文件路径>]
                                       导出 CSV
   quota                               查询点数与个人信息
+  pay                               扫码充值点数（终端出二维码，付完自动继续）
   logout                              登出当前账号
   config set base-url <url>           设置后端服务地址
   config set insecure true|false      忽略 HTTPS 证书校验（自签证书时开）
@@ -61,7 +63,9 @@ const USAGE = `微博热榜采集 CLI（服务端直接 HTTP 采集，无需微�
   version                             显示版本
 
 全局参数: --token <token>  --base-url <url>（默认 ${DEFAULT_BASE_URL}）
-          --interval <秒> --timeout <秒>（等待任务时可用，默认 2 / 120）`;
+          --interval <秒> --timeout <秒>（等待任务时可用，默认 2 / 120）
+
+AI 来源参数（所有 API 命令必填）: --skill-name <本Skill名> --ai-entry <AI工具标识>`;
 
 function requireToken(cfg) {
   if (!cfg.token) throw new BizError(1002, '未登录：缺少 token');
@@ -175,7 +179,8 @@ async function cmdExport(args, opts) {
   let buf;
   try {
     const res = await fetch(`${cfg.baseUrl}/api/v1/platform/exports/${encodeURIComponent(info.export_id)}/file`,
-      { headers: { Authorization: `Bearer ${cfg.token}` }, signal: ctrl.signal });
+      { headers: { Authorization: `Bearer ${cfg.token}`, ...skillHeaders() }, signal: ctrl.signal });
+    warnSkillResponse(res);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     buf = Buffer.from(await res.arrayBuffer());
   } catch (err) {
@@ -248,10 +253,19 @@ async function main() {
     case 'query': return cmdQuery(args, opts);
     case 'export': return cmdExport(args, opts);
     case 'quota': return cmdQuota(opts);
+    case 'pay': {
+      // 主动充值: 建单 → 终端二维码 → (交互)等到账
+      const { rechargeFlow } = require('./src/pay');
+      const res = await rechargeFlow({ yuan: opts.yuan, channel: opts.channel });
+      return printOk({
+        order_no: res.order.order_no, points: res.order.points,
+        status: res.order.status, paid: !res.pending, pay_url: res.payUrl,
+      });
+    }
     case 'logout': return cmdLogout(opts);
     case 'config': return cmdConfig(args, opts);
     default: throw new UsageError(`未知命令: ${cmd}`);
   }
 }
 
-main().catch((e) => exitWithError(e, { usage: USAGE }));
+main().catch((e) => handleFatal(e, main, { usage: USAGE }));

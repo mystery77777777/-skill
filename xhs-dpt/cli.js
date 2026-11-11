@@ -12,11 +12,12 @@
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-const { ApiClient, BizError, allowInsecureTls } = require('./src/client');
+const { ApiClient, BizError, allowInsecureTls, skillHeaders, warnSkillResponse } = require('./src/client');
 const { loadConfig, saveConfig, resolveConfig, maskToken, configPaths, DEFAULT_BASE_URL } = require('./src/config');
 const {
   UsageError, printOk, printFail, exitWithError, pollTask, parsePositiveNumber,
 } = require('./src/output');
+const { handleFatal } = require('./src/pay');
 
 const CAPABILITY = 'xhs_collect';
 const MIN_BATCH = 1;
@@ -26,7 +27,7 @@ const DOWNLOAD_TIMEOUT_MS = 60000; // 导出文件下载超时 (放宽于 API 15
 
 // ---------------------------------------------------------------- 参数解析
 
-const VALUE_FLAGS = new Set(['file', 'interval', 'timeout', 'token', 'base-url', 'access-token', 'comment-max', 'out']);
+const VALUE_FLAGS = new Set(['yuan', 'channel', 'file', 'interval', 'timeout', 'token', 'base-url', 'access-token', 'comment-max', 'out', 'skill-name', 'ai-entry']);
 const MULTI_FLAGS = new Set(['url']);
 const BOOL_FLAGS = new Set(['wait', 'help', 'link', 'check', 'force', 'no-comments', 'version']);
 
@@ -90,13 +91,16 @@ const USAGE = `小红书互动数采集 CLI (点赞/收藏/评论数/分享数)
   export <task_id> [--wait] [--out <文件路径>] [--timeout 秒]
                                     导出任务结果 CSV（保留 7 天；--wait 等待生成, 默认超时 300s）
   quota                             查询点数与个人信息
+  pay                               扫码充值点数（终端出二维码，付完自动继续）
   logout                            登出当前账号
   config set base-url <url>         设置后端服务地址
   config set insecure true|false    忽略 HTTPS 证书校验（自签证书时开）
   config show                       查看当前配置（token 脱敏）
   version                           显示版本
 
-全局参数: --token <token>（临时覆盖）  --base-url <url>（默认 ${DEFAULT_BASE_URL}）`;
+全局参数: --token <token>（临时覆盖）  --base-url <url>（默认 ${DEFAULT_BASE_URL}）
+
+AI 来源参数（所有 API 命令必填）: --skill-name <本Skill名> --ai-entry <AI工具标识>`;
 
 // ---------------------------------------------------------------- 各命令
 
@@ -310,7 +314,8 @@ async function cmdExport(args, opts) {
   let buf;
   try {
     const res = await fetch(`${cfg.baseUrl}/api/v1/platform/exports/${encodeURIComponent(info.export_id)}/file`,
-      { headers: { Authorization: `Bearer ${cfg.token}` }, signal: dlCtrl.signal });
+      { headers: { Authorization: `Bearer ${cfg.token}`, ...skillHeaders() }, signal: dlCtrl.signal });
+    warnSkillResponse(res);
     if (!res.ok) {
       printFail('EXPORT_FAILED', `下载失败 HTTP ${res.status}`);
       process.exit(5);
@@ -413,6 +418,15 @@ async function main() {
     case 'query': return cmdQuery(args, opts);
     case 'export': return cmdExport(args, opts);
     case 'quota': return cmdQuota(opts);
+    case 'pay': {
+      // 主动充值: 建单 → 终端二维码 → (交互)等到账
+      const { rechargeFlow } = require('./src/pay');
+      const res = await rechargeFlow({ yuan: opts.yuan, channel: opts.channel });
+      return printOk({
+        order_no: res.order.order_no, points: res.order.points,
+        status: res.order.status, paid: !res.pending, pay_url: res.payUrl,
+      });
+    }
     case 'logout': return cmdLogout(opts);
     case 'config': return cmdConfig(args, opts);
     default: throw new UsageError(`未知命令: ${cmd}`);
@@ -420,4 +434,4 @@ async function main() {
 }
 
 // 接线 USAGE (审计 G1 同源问题): 参数错误时在 stderr 输出帮助文案
-main().catch((e) => exitWithError(e, { usage: USAGE }));
+main().catch((e) => handleFatal(e, main, { usage: USAGE }));

@@ -1,0 +1,10 @@
+{
+  "name": "sohu-search",
+  "version": "1.0.0",
+  "private": true,
+  "description": "搜狐站内搜索采集 Skill CLI (关键词搜索全站内容, 每页 20 条 = 1 点数)",
+  "main": "cli.js",
+  "engines": {
+    "node": ">=18"
+  }
+}

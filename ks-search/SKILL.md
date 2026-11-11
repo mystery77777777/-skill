@@ -8,6 +8,12 @@ description: 快手搜索视频采集工具（关键词搜索）。当用户需�
 
 # 快手搜索视频采集 Skill（ks-search）
 
+## AI 调用来源参数（必填）
+
+所有会访问后端 API 的命令必须携带 `--skill-name ks-search` 和 `--ai-entry <AI工具标识>`（例如 `claude-code`、`codex`、`workbuddy`）。IP 无需传递，由服务端自动获取。首次缺参会告警放行，第二次起拒绝。
+
+示例：`node cli.js quota --skill-name ks-search --ai-entry claude-code`。
+
 封装「小红书能力平台」（FastAPI，`/api/v1`）的 CLI，供 AI agent 调用。输入**关键词 + 条数**，平台调度内网浏览器节点以真人滚动方式打开快手搜索页（`/search/<关键词>?type=video`），拦截官方搜索接口响应，采集视频列表。
 
 - **能采什么**：搜索结果页的视频明细（`title` 视频文案、`digg_count` 点赞、`comment_count` 评论数、`collect_count` 收藏、`share_count` 分享数、`play_count` 播放量、`recommend_count` 推荐数、`author_nickname` 作者昵称、`author_sec_uid` / `author_uid`、`topics` 话题、`create_time` 发布时间、`duration_ms` 时长、`cover_url` 封面图、`url` 视频链接）。
@@ -16,6 +22,24 @@ description: 快手搜索视频采集工具（关键词搜索）。当用户需�
 - **限制**：单任务 1 个关键词、1~500 条；节点滚动约 3-5 分钟（500 条约 5 分钟）。
 - 采集由**平台调度内网浏览器节点**完成（节点登录态在浏览器端人工维护，平台不持有账号）。
 - 客户端是零依赖 CLI（Node ≥ 18，无需 `npm install`），全部采集逻辑在后端完成。
+
+## 点数不足怎么办（自动扫码充值）
+
+跑命令时如果点数不够，CLI **不会直接报错退出**，而是自己建一张充值单、把二维码打在终端里：
+
+```
+点数不足，已自动创建充值单 RO2611051712281481f36de19
+金额 10.00 元 → 100 点（支付宝）
+<二维码色块>
+[pay] 已支付
+已到账：+100 点，继续执行原命令
+```
+
+- **在终端里跑**：手机支付宝/微信对着终端扫码 → 付完点数自动到账 → 原命令自动重跑，不用手动再来一遍。
+- **AI agent / 非交互环境**（管道、重定向）：CLI 不阻塞等待，而是返回订单号和充值页地址 `{服务地址}/recharge.html`。把链接交给用户，他在网页扫码付款，付完重跑原命令即可（点数会自动到账）。
+- **主动充值**：`node cli.js pay --yuan 50 --skill-name ks-search --ai-entry <ai-entry>`（不传 `--yuan` 默认 10 元；可加 `--channel alipay` 或 `--channel wechat`）。
+- **不想自动充值**：设环境变量 `XHS_NO_AUTO_PAY=1`，则恢复旧行为（只提示点数不足）。
+- 换算：**1 元 = 10 点**，注册送 10 点。
 
 ## 客服支持
 
@@ -36,15 +60,15 @@ description: 快手搜索视频采集工具（关键词搜索）。当用户需�
 
 本 skill 是**确认制一次性任务**，不是跑完就完。请按下面的流程驱动对话：
 
-1. **查余额**：`node cli.js quota` 确认点数充足（余额 < 预扣点数会被 3001 拒绝）。
+1. **查余额**：`node cli.js quota --skill-name ks-search --ai-entry <ai-entry>` 确认点数充足（余额 < 预扣点数会被 3001 拒绝）。
 2. **报价确认（必须）**：向用户明确以下信息并**等用户确认后**再提交：
    - 搜索关键词、采集数量（1~500）
    - 预估点数：`ceil(数量/20)`（例：50 条 → 3 点；120 条 → 6 点）
    - 计费规则：**预扣 ceil(N/20)，按实采 ceil(M/20) 结算退差，零头按一次计，零结果或失败全退**
    - **未经用户确认不要执行 submit。**
-3. **提交并等待**：`node cli.js submit --keyword "<词>" --count <N> --wait --timeout 600`。节点滚动约 3-5 分钟属正常，不要中途重试。
+3. **提交并等待**：`node cli.js submit --keyword "<词>" --count <N> --wait --timeout 600 --skill-name ks-search --ai-entry <ai-entry>`。节点滚动约 3-5 分钟属正常，不要中途重试。
 4. **如实汇报结算**：结果里的 `collected_count`（实采条数）、`settle_charged`（实收点数）、`refunded_diff`（退还差值）必须如实告知用户（例：「实采 45 条，实收 3 点，退 0 点」）。
-5. **需要文件时导出**：`node cli.js export <task_id> --wait --out 搜索结果.csv`，把 CSV 路径交给用户。
+5. **需要文件时导出**：`node cli.js export <task_id> --wait --out 搜索结果.csv --skill-name ks-search --ai-entry <ai-entry>`，把 CSV 路径交给用户。
 
 **筛选说明**：快手 Web 搜索无排序/发布时间筛选入口，按平台默认结果序采集。
 
@@ -84,8 +108,8 @@ node cli.js version
 **方式一：扫码/链接注册（唯一方式，用户在手机上完成）**
 
 ```bash
-node cli.js register --link        # 生成注册二维码/链接
-node cli.js register --check --access-token "<上一步下发的串>"   # 用户完成后确认并保存 token
+node cli.js register --link --skill-name ks-search --ai-entry <ai-entry>        # 生成注册二维码/链接
+node cli.js register --check --access-token "<上一步下发的串>" --skill-name ks-search --ai-entry <ai-entry>   # 用户完成后确认并保存 token
 ```
 
 `register --link` 的 stdout 返回 `qr_url` / `register_url` / `access_token`。**agent 必须把注册引导原样发给用户**（stderr 里也给出了同样话术，可直接复制）：
@@ -109,8 +133,8 @@ access_token（注册后校验用）：<access_token>
 ### login — 登录
 
 ```bash
-node cli.js login --link
-node cli.js login --check --access-token "<上一步下发的串>"
+node cli.js login --link --skill-name ks-search --ai-entry <ai-entry>
+node cli.js login --check --access-token "<上一步下发的串>" --skill-name ks-search --ai-entry <ai-entry>
 ```
 
 引导话术同 register（把"注册"换成"登录"）。成功后 token 自动保存。
@@ -118,7 +142,7 @@ node cli.js login --check --access-token "<上一步下发的串>"
 ### quota — 查询点数
 
 ```bash
-node cli.js quota
+node cli.js quota --skill-name ks-search --ai-entry <ai-entry>
 ```
 
 ```json
@@ -128,11 +152,11 @@ node cli.js quota
 ### submit — 提交搜索采集任务
 
 ```bash
-node cli.js submit --keyword "机油"                          # 默认 50 条
-node cli.js submit --keyword "机油" --count 120              # 120 条 (预扣 6 点)
-node cli.js submit --keyword "美孚" --count 40
-node cli.js submit --keyword "机油" --count 50 --wait        # 提交并等待结果 (约 3-5 分钟)
-node cli.js submit --keyword "机油" --count 50 --wait --timeout 600 --force
+node cli.js submit --keyword "机油" --skill-name ks-search --ai-entry <ai-entry>                          # 默认 50 条
+node cli.js submit --keyword "机油" --count 120 --skill-name ks-search --ai-entry <ai-entry>              # 120 条 (预扣 6 点)
+node cli.js submit --keyword "美孚" --count 40 --skill-name ks-search --ai-entry <ai-entry>
+node cli.js submit --keyword "机油" --count 50 --wait --skill-name ks-search --ai-entry <ai-entry>        # 提交并等待结果 (约 3-5 分钟)
+node cli.js submit --keyword "机油" --count 50 --wait --timeout 600 --force --skill-name ks-search --ai-entry <ai-entry>
 ```
 
 - `--keyword`：搜索关键词（≤64 字符；填视频链接会被拒绝，单篇互动数请用 ks-collect skill）。
@@ -164,14 +188,14 @@ node cli.js submit --keyword "机油" --count 50 --wait --timeout 600 --force
 ### query — 查询任务状态与结果
 
 ```bash
-node cli.js query <task_id>            # 单次查询
-node cli.js query <task_id> --wait     # 轮询到终态 (默认 600s 超时)
+node cli.js query <task_id> --skill-name ks-search --ai-entry <ai-entry>            # 单次查询
+node cli.js query <task_id> --wait --skill-name ks-search --ai-entry <ai-entry>     # 轮询到终态 (默认 600s 超时)
 ```
 
 ### export — 导出结果 CSV
 
 ```bash
-node cli.js export <task_id> --wait --out 搜索结果.csv
+node cli.js export <task_id> --wait --out 搜索结果.csv --skill-name ks-search --ai-entry <ai-entry>
 ```
 
 下载任务结果 CSV（BOM 头，Excel 直开不乱码）：任务汇总（关键词/状态/实采数/实收点数/退差点数）+ 视频明细（文案/互动数/作者/发布时间/封面/链接）。导出文件保留 7 天。
@@ -179,7 +203,7 @@ node cli.js export <task_id> --wait --out 搜索结果.csv
 ### logout — 登出（切换账号）
 
 ```bash
-node cli.js logout
+node cli.js logout --skill-name ks-search --ai-entry <ai-entry>
 ```
 
 ### config — 配置管理
@@ -191,11 +215,11 @@ node cli.js config show        # token 脱敏显示
 
 ## 典型工作流（agent 照此执行）
 
-1. 用户说「帮我搜一下 XX 的快手视频」→ `node cli.js quota` 确认余额。
+1. 用户说「帮我搜一下 XX 的快手视频」→ `node cli.js quota --skill-name ks-search --ai-entry <ai-entry>` 确认余额。
 2. 和用户确认关键词、数量、排序、发布时间；算出预估点数 `ceil(N/20)`；**明确告知计费规则（预扣/结算退差/零头按一次计/零结果失败全退）并等确认**。
-3. `node cli.js submit --keyword "<词>" --count <N> --wait --timeout 600`（3-5 分钟，不重试）。
+3. `node cli.js submit --keyword "<词>" --count <N> --wait --timeout 600 --skill-name ks-search --ai-entry <ai-entry>`（3-5 分钟，不重试）。
 4. 如实汇报：实采条数、实收点数、退差点数；简要展示视频列表（文案/互动数/作者）。
-5. 用户要文件 → `node cli.js export <task_id> --wait --out <文件>.csv`，交付路径。
+5. 用户要文件 → `node cli.js export <task_id> --wait --out <文件>.csv --skill-name ks-search --ai-entry <ai-entry>`，交付路径。
 6. 用户要继续分析 → 可基于视频链接用 ks-collect 采单篇互动数或 ks-comments 采评论。
 
 ## 错误处理指引

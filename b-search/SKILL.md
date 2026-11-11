@@ -8,6 +8,12 @@ description: B站关键词搜索采集工具。当用户需要按关键词搜索
 
 # B站搜索采集 Skill（b-search）
 
+## AI 调用来源参数（必填）
+
+所有会访问后端 API 的命令必须携带 `--skill-name b-search` 和 `--ai-entry <AI工具标识>`（例如 `claude-code`、`codex`、`workbuddy`）。IP 无需传递，由服务端自动获取。首次缺参会告警放行，第二次起拒绝。
+
+示例：`node cli.js quota --skill-name b-search --ai-entry claude-code`。
+
 封装「小红书能力平台」（FastAPI，`/api/v1`）的 CLI，供 AI agent 调用：提交搜索关键词 + 页数 → 平台调度内网浏览器节点打开 B站搜索页（`search.bilibili.com/all?keyword=<kw>`）并**点分页器翻页**，拦截官方搜索接口（`x/web-interface/wbi/search/type`）响应 → 采集搜索结果视频列表。
 
 - **能采什么**：搜索结果视频的标题、简介、播放量（`view_count`）、弹幕（`danmaku_count`）、收藏（`collect_count`）、点赞（`like_count`）、UP 主昵称、封面、视频链接与 BV 号。
@@ -16,6 +22,24 @@ description: B站关键词搜索采集工具。当用户需要按关键词搜索
 - **适用场景**：选题调研、热点监测、竞品内容分析、达人筛选。
 - **省心机制**：按页计费（1~10 页，每页约 42 条）、结算按实采量退差、零结果或失败全额返还、Agent 友好（stdout 纯 JSON + 统一退出码）。
 - 客户端是零依赖 CLI（Node ≥ 18，无需 `npm install`），全部采集逻辑在后端完成。
+
+## 点数不足怎么办（自动扫码充值）
+
+跑命令时如果点数不够，CLI **不会直接报错退出**，而是自己建一张充值单、把二维码打在终端里：
+
+```
+点数不足，已自动创建充值单 RO2611051712281481f36de19
+金额 10.00 元 → 100 点（支付宝）
+<二维码色块>
+[pay] 已支付
+已到账：+100 点，继续执行原命令
+```
+
+- **在终端里跑**：手机支付宝/微信对着终端扫码 → 付完点数自动到账 → 原命令自动重跑，不用手动再来一遍。
+- **AI agent / 非交互环境**（管道、重定向）：CLI 不阻塞等待，而是返回订单号和充值页地址 `{服务地址}/recharge.html`。把链接交给用户，他在网页扫码付款，付完重跑原命令即可（点数会自动到账）。
+- **主动充值**：`node cli.js pay --yuan 50 --skill-name b-search --ai-entry <ai-entry>`（不传 `--yuan` 默认 10 元；可加 `--channel alipay` 或 `--channel wechat`）。
+- **不想自动充值**：设环境变量 `XHS_NO_AUTO_PAY=1`，则恢复旧行为（只提示点数不足）。
+- 换算：**1 元 = 10 点**，注册送 10 点。
 
 ## 客服支持
 
@@ -74,8 +98,8 @@ node cli.js version
 **方式一：扫码/链接注册（唯一方式，用户在手机上完成）**
 
 ```bash
-node cli.js register --link        # 生成注册二维码/链接
-node cli.js register --check --access-token "<上一步下发的串>"   # 用户完成后确认并保存 token
+node cli.js register --link --skill-name b-search --ai-entry <ai-entry>        # 生成注册二维码/链接
+node cli.js register --check --access-token "<上一步下发的串>" --skill-name b-search --ai-entry <ai-entry>   # 用户完成后确认并保存 token
 ```
 
 `register --link` 的 stdout 返回 `qr_url` / `register_url` / `access_token`。**agent 必须把注册引导原样发给用户**（stderr 里也给出了同样话术，可直接复制）：
@@ -99,8 +123,8 @@ access_token（注册后校验用）：<access_token>
 ### login — 登录
 
 ```bash
-node cli.js login --link
-node cli.js login --check --access-token "<上一步下发的串>"
+node cli.js login --link --skill-name b-search --ai-entry <ai-entry>
+node cli.js login --check --access-token "<上一步下发的串>" --skill-name b-search --ai-entry <ai-entry>
 ```
 
 引导话术同 register（把"注册"换成"登录"）。成功后 token 自动保存。
@@ -108,7 +132,7 @@ node cli.js login --check --access-token "<上一步下发的串>"
 ### quota — 查询点数
 
 ```bash
-node cli.js quota
+node cli.js quota --skill-name b-search --ai-entry <ai-entry>
 ```
 
 ```json
@@ -118,15 +142,15 @@ node cli.js quota
 ### logout — 登出（切换账号）
 
 ```bash
-node cli.js logout
+node cli.js logout --skill-name b-search --ai-entry <ai-entry>
 ```
 
 ### submit — 提交搜索采集任务
 
 ```bash
-node cli.js submit --keyword "机油 评测"
-node cli.js submit --keyword "机油" --pages 3 --wait
-node cli.js submit --keyword "机油" --pages 3 --force     # 跳过 24h 内容去重强制重提
+node cli.js submit --keyword "机油 评测" --skill-name b-search --ai-entry <ai-entry>
+node cli.js submit --keyword "机油" --pages 3 --wait --skill-name b-search --ai-entry <ai-entry>
+node cli.js submit --keyword "机油" --pages 3 --force --skill-name b-search --ai-entry <ai-entry>     # 跳过 24h 内容去重强制重提
 ```
 
 - `--pages` 采集页数（1~10，默认 1；每页约 42 条）。
@@ -163,9 +187,9 @@ node cli.js submit --keyword "机油" --pages 3 --force     # 跳过 24h 内容�
 ### query — 查询任务 / 拉取结果
 
 ```bash
-node cli.js query <task_id>                          # 查一次
-node cli.js query <task_id> --wait                   # 轮询直到终态
-node cli.js query <task_id> --wait --interval 5 --timeout 600
+node cli.js query <task_id> --skill-name b-search --ai-entry <ai-entry>                          # 查一次
+node cli.js query <task_id> --wait --skill-name b-search --ai-entry <ai-entry>                   # 轮询直到终态
+node cli.js query <task_id> --wait --interval 5 --timeout 600 --skill-name b-search --ai-entry <ai-entry>
 ```
 
 终态：`done`（成功）/ `failed`（失败，点数全额返还）。
@@ -173,7 +197,7 @@ node cli.js query <task_id> --wait --interval 5 --timeout 600
 ### export — 导出 CSV
 
 ```bash
-node cli.js export <task_id> --wait --out out.csv
+node cli.js export <task_id> --wait --out out.csv --skill-name b-search --ai-entry <ai-entry>
 ```
 
 生成两段式 CSV（BOM 头，Excel 直开不乱码）：任务汇总 + 视频明细（标题/简介/播放/弹幕/收藏/点赞/UP主/封面/BV号/链接）。
@@ -188,10 +212,10 @@ node cli.js config show        # token 脱敏显示
 ## 典型工作流（agent 照此执行）
 
 1. 确认是**关键词**不是链接（含 `bilibili.com`/`b23.tv` 的一律拒绝，引导改用 `b-collect`）。
-2. `node cli.js quota` — 确认剩余点数 ≥ `页数`。
-3. `node cli.js submit --keyword "<关键词>" --pages N --wait` — 一步拿到终态结果（节点翻页约 3-5 分钟）。
+2. `node cli.js quota --skill-name b-search --ai-entry <ai-entry>` — 确认剩余点数 ≥ `页数`。
+3. `node cli.js submit --keyword "<关键词>" --pages N --wait --skill-name b-search --ai-entry <ai-entry>` — 一步拿到终态结果（节点翻页约 3-5 分钟）。
 4. 解析 stdout JSON：把 `result.videos` 整理成表格返回给用户（标题/UP主/播放/弹幕/收藏/点赞），并如实汇报 `settle_charged`（实收点数）与 `refunded_diff`（退差点数）。
-5. 用户要文件时：`node cli.js export <task_id> --wait --out B站搜索结果.csv`，把 CSV 路径交给用户。
+5. 用户要文件时：`node cli.js export <task_id> --wait --out B站搜索结果.csv --skill-name b-search --ai-entry <ai-entry>`，把 CSV 路径交给用户。
 
 ## 错误处理指引
 

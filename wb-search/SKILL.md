@@ -8,12 +8,36 @@ description: 微博关键词搜索采集工具。当用户需要按关键词搜�
 
 # 微博关键词搜索采集 Skill（wb-search）
 
+## AI 调用来源参数（必填）
+
+所有会访问后端 API 的命令必须携带 `--skill-name wb-search` 和 `--ai-entry <AI工具标识>`（例如 `claude-code`、`codex`、`workbuddy`）。IP 无需传递，由服务端自动获取。首次缺参会告警放行，第二次起拒绝。
+
+示例：`node cli.js quota --skill-name wb-search --ai-entry claude-code`。
+
 封装「小红书能力平台」（FastAPI，`/api/v1`）的 CLI，供 AI agent 调用：提交关键词 + 采集条数（可选类型/排序/起止日期）→ 平台调度内网浏览器节点打开 `s.weibo.com` 搜索页逐页解析 SSR 卡片 → 拿到微博列表（正文、作者、发布时间、转发/评论/点赞三项计数、微博链接）。结果可直接导出 CSV（BOM 头，Excel 直开不乱码）。
 
 - **能采什么**：微博正文（`title`/`text`）、作者昵称与 ID、发布时间（`create_time`）、**转发数（`share_count`）、评论数（`comment_count`）、点赞数（`like_count`）**（三项都由搜索页直出，无需逐条补采）、微博 ID（`post_id`）与 bid、原帖链接。
 - **筛选维度**：关键词（`--keyword`）、采集条数（`--count`，1~500）、微博类型（`--type`）、排序（`--sort`）、起止日期（`--start-date` / `--end-date`）。
 - **省心机制**：预扣按请求量、结算按实采量自动退差、零结果/失败全额返还、Agent 友好（stdout 纯 JSON + 统一退出码）。
 - 客户端是零依赖 CLI（Node ≥ 18，无需 `npm install`），全部采集逻辑在后端完成。
+
+## 点数不足怎么办（自动扫码充值）
+
+跑命令时如果点数不够，CLI **不会直接报错退出**，而是自己建一张充值单、把二维码打在终端里：
+
+```
+点数不足，已自动创建充值单 RO2611051712281481f36de19
+金额 10.00 元 → 100 点（支付宝）
+<二维码色块>
+[pay] 已支付
+已到账：+100 点，继续执行原命令
+```
+
+- **在终端里跑**：手机支付宝/微信对着终端扫码 → 付完点数自动到账 → 原命令自动重跑，不用手动再来一遍。
+- **AI agent / 非交互环境**（管道、重定向）：CLI 不阻塞等待，而是返回订单号和充值页地址 `{服务地址}/recharge.html`。把链接交给用户，他在网页扫码付款，付完重跑原命令即可（点数会自动到账）。
+- **主动充值**：`node cli.js pay --yuan 50 --skill-name wb-search --ai-entry <ai-entry>`（不传 `--yuan` 默认 10 元；可加 `--channel alipay` 或 `--channel wechat`）。
+- **不想自动充值**：设环境变量 `XHS_NO_AUTO_PAY=1`，则恢复旧行为（只提示点数不足）。
+- 换算：**1 元 = 10 点**，注册送 10 点。
 
 ## 客服支持
 
@@ -76,12 +100,12 @@ node cli.js version
 与 `wb-collect` skill 完全一致（同一账号体系、同一配置文件），此处不再赘述：
 
 ```bash
-node cli.js register --link
-node cli.js register --check --access-token "<串>"
-node cli.js login --link
-node cli.js login --check --access-token "<串>"
-node cli.js quota
-node cli.js logout
+node cli.js register --link --skill-name wb-search --ai-entry <ai-entry>
+node cli.js register --check --access-token "<串>" --skill-name wb-search --ai-entry <ai-entry>
+node cli.js login --link --skill-name wb-search --ai-entry <ai-entry>
+node cli.js login --check --access-token "<串>" --skill-name wb-search --ai-entry <ai-entry>
+node cli.js quota --skill-name wb-search --ai-entry <ai-entry>
+node cli.js logout --skill-name wb-search --ai-entry <ai-entry>
 node cli.js config set base-url http://127.0.0.1:8084
 node cli.js config show
 ```
@@ -91,11 +115,11 @@ node cli.js config show
 ### submit — 提交搜索采集任务
 
 ```bash
-node cli.js submit --keyword "法拉利"
-node cli.js submit --keyword "法拉利" --count 100 --wait
-node cli.js submit --keyword "法拉利" --type ori --sort hot --wait
-node cli.js submit --keyword "法拉利" --start-date 2026-10-01 --end-date 2026-10-29 --wait
-node cli.js submit --keyword "法拉利" --force      # 跳过 24h 内容去重强制重提
+node cli.js submit --keyword "法拉利" --skill-name wb-search --ai-entry <ai-entry>
+node cli.js submit --keyword "法拉利" --count 100 --wait --skill-name wb-search --ai-entry <ai-entry>
+node cli.js submit --keyword "法拉利" --type ori --sort hot --wait --skill-name wb-search --ai-entry <ai-entry>
+node cli.js submit --keyword "法拉利" --start-date 2026-10-01 --end-date 2026-10-29 --wait --skill-name wb-search --ai-entry <ai-entry>
+node cli.js submit --keyword "法拉利" --force --skill-name wb-search --ai-entry <ai-entry>      # 跳过 24h 内容去重强制重提
 ```
 
 - 每任务 1 个关键词。
@@ -114,7 +138,7 @@ node cli.js submit --keyword "法拉利" --force      # 跳过 24h 内容去重�
 ### query — 查询任务 / 拉取结果
 
 ```bash
-node cli.js query <task_id> [--wait] [--interval 秒] [--timeout 秒]
+node cli.js query <task_id> [--wait] [--interval 秒] [--timeout 秒] --skill-name wb-search --ai-entry <ai-entry>
 ```
 
 终态输出示例：
@@ -139,7 +163,7 @@ node cli.js query <task_id> [--wait] [--interval 秒] [--timeout 秒]
 ### export — 导出 CSV
 
 ```bash
-node cli.js export <task_id> --wait --out 微博搜索.csv
+node cli.js export <task_id> --wait --out 微博搜索.csv --skill-name wb-search --ai-entry <ai-entry>
 ```
 
 两段式 CSV（BOM 头）：任务汇总 + 微博明细（正文/转发·评论·点赞/作者/时间/链接）。
@@ -147,10 +171,10 @@ node cli.js export <task_id> --wait --out 微博搜索.csv
 ## 典型工作流（agent 照此执行）
 
 1. 与用户确认关键词；如用户还要筛选，确认类型/排序/起止日期。
-2. `node cli.js quota` — 确认点数够（一页 1 点，先估 `ceil(条数/20)`）。
-3. `node cli.js submit --keyword "<关键词>" [--count N] [--type T] [--sort S] [--start-date D] [--end-date D] --wait`。
+2. `node cli.js quota --skill-name wb-search --ai-entry <ai-entry>` — 确认点数够（一页 1 点，先估 `ceil(条数/20)`）。
+3. `node cli.js submit --keyword "<关键词>" [--count N] [--type T] [--sort S] [--start-date D] [--end-date D] --wait --skill-name wb-search --ai-entry <ai-entry>`。
 4. 解析 stdout JSON，把 `result.videos` 整理成表格返回；**按 `collected_count` / `settle_charged` 如实汇报计费**。
-5. 用户要文件时 `node cli.js export <task_id> --wait --out <文件名>.csv`。
+5. 用户要文件时 `node cli.js export <task_id> --wait --out <文件名>.csv --skill-name wb-search --ai-entry <ai-entry>`。
 
 ## 错误处理指引
 

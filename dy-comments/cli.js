@@ -19,9 +19,10 @@
  */
 const fs = require('fs');
 const path = require('path');
-const { ApiClient, BizError, allowInsecureTls } = require('./src/client');
+const { ApiClient, BizError, allowInsecureTls, skillHeaders, warnSkillResponse } = require('./src/client');
 const { loadConfig, saveConfig, resolveConfig, maskToken, configPaths, DEFAULT_BASE_URL } = require('./src/config');
 const { UsageError, printOk, printFail, exitWithError, parsePositiveNumber } = require('./src/output');
+const { handleFatal } = require('./src/pay');
 
 const CAPABILITY = 'dy_comments';
 const VERSION = '1.0.0';
@@ -29,8 +30,8 @@ const DOWNLOAD_TIMEOUT_MS = 60000; // 导出 CSV 下载超时
 
 // ---------------------------------------------------------------- 参数解析
 
-const VALUE_FLAGS = new Set(['session', 'root', 'url', 'page', 'page-size', 'status',
-  'token', 'base-url', 'access-token', 'out']);
+const VALUE_FLAGS = new Set(['yuan', 'channel', 'session', 'root', 'url', 'page', 'page-size', 'status',
+  'token', 'base-url', 'access-token', 'out', 'skill-name', 'ai-entry']);
 const BOOL_FLAGS = new Set(['help', 'link', 'check', 'version', 'expand']);
 
 function camel(s) {
@@ -101,13 +102,16 @@ const USAGE = `抖音视频评论分步采集 CLI (会话制, 按步计费: 每�
   login --link                      生成登录二维码/链接（推荐）
   login --check --access-token <串> 用户完成授权后确认并保存 token
   quota                             查询点数与个人信息
+  pay                               扫码充值点数（终端出二维码，付完自动继续）
   logout                            登出当前账号
   config set base-url <url>         设置后端服务地址
   config set insecure true|false    忽略 HTTPS 证书校验（自签证书时开）
   config show                       查看当前配置（token 脱敏）
   version                           显示版本
 
-全局参数: --token <token>（临时覆盖）  --base-url <url>（默认 ${DEFAULT_BASE_URL}）`;
+全局参数: --token <token>（临时覆盖）  --base-url <url>（默认 ${DEFAULT_BASE_URL}）
+
+AI 来源参数（所有 API 命令必填）: --skill-name <本Skill名> --ai-entry <AI工具标识>`;
 
 // ---------------------------------------------------------------- 公共
 
@@ -334,7 +338,8 @@ async function cmdExport(opts) {
   try {
     const res = await fetch(
       `${cfg.baseUrl}/api/v1/dy/comments/sessions/${encodeURIComponent(sessionId)}/export`,
-      { headers: { Authorization: `Bearer ${cfg.token}` }, signal: dlCtrl.signal });
+      { headers: { Authorization: `Bearer ${cfg.token}`, ...skillHeaders() }, signal: dlCtrl.signal });
+    warnSkillResponse(res);
     if (!res.ok) {
       let msg = `HTTP ${res.status}`;
       try { msg = (await res.json()).message || msg; } catch { /* 非信封 */ }
@@ -390,10 +395,19 @@ async function main() {
     case 'sessions': return cmdListSessions(opts);
     case 'export': return cmdExport(opts);
     case 'quota': return cmdQuota(opts);
+    case 'pay': {
+      // 主动充值: 建单 → 终端二维码 → (交互)等到账
+      const { rechargeFlow } = require('./src/pay');
+      const res = await rechargeFlow({ yuan: opts.yuan, channel: opts.channel });
+      return printOk({
+        order_no: res.order.order_no, points: res.order.points,
+        status: res.order.status, paid: !res.pending, pay_url: res.payUrl,
+      });
+    }
     case 'logout': return cmdLogout(opts);
     case 'config': return cmdConfig(args, opts);
     default: throw new UsageError(`未知命令: ${cmd}`);
   }
 }
 
-main().catch((e) => exitWithError(e, { usage: USAGE }));
+main().catch((e) => handleFatal(e, main, { usage: USAGE }));

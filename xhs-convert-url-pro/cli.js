@@ -11,11 +11,12 @@
  */
 const crypto = require('crypto');
 const fs = require('fs');
-const { ApiClient, BizError, NetworkError, allowInsecureTls } = require('./src/client');
+const { ApiClient, BizError, NetworkError, allowInsecureTls, skillHeaders, warnSkillResponse } = require('./src/client');
 const { loadConfig, saveConfig, resolveConfig, maskToken, configPaths, DEFAULT_BASE_URL } = require('./src/config');
 const {
   UsageError, printOk, printFail, exitWithError, pollTask, parsePositiveNumber,
 } = require('./src/output');
+const { handleFatal } = require('./src/pay');
 
 const SKILL_NAME = 'xhs-convert-url-pro';
 const VERSION = '2.0.1';
@@ -24,7 +25,7 @@ const MAX_BATCH = 50;
 
 // ---------------------------------------------------------------- 参数解析
 
-const VALUE_FLAGS = new Set(['file', 'interval', 'timeout', 'token', 'base-url', 'access-token']);
+const VALUE_FLAGS = new Set(['yuan', 'channel', 'file', 'interval', 'timeout', 'token', 'base-url', 'access-token', 'skill-name', 'ai-entry']);
 const MULTI_FLAGS = new Set(['url']);
 const BOOL_FLAGS = new Set(['wait', 'help', 'link', 'check', 'version']);
 
@@ -83,6 +84,7 @@ const USAGE = `小红书转链 CLI (v${VERSION})
   query <task_id> [--wait] [--interval 秒] [--timeout 秒]
                                     查询任务状态与结果
   quota                             查询点数与个人信息
+  pay                               扫码充值点数（终端出二维码，付完自动继续）
   logout                            登出当前账号
   config set base-url <url>         设置后端服务地址
   config set insecure true|false    忽略 HTTPS 证书校验（自签证书时开）
@@ -91,7 +93,9 @@ const USAGE = `小红书转链 CLI (v${VERSION})
 全局参数: --token <token>（临时覆盖）  --base-url <url>（默认 ${DEFAULT_BASE_URL}）
 
 说明: 凭证与「小红书互动数采集」skill (xhs-dpt) 共用 ~/.xhs-platform/config.json，
-     没有 token 或 token 失效时执行 login --link 重新登录即可。`;
+     没有 token 或 token 失效时执行 login --link 重新登录即可。
+
+AI 来源参数（所有 API 命令必填）: --skill-name <本Skill名> --ai-entry <AI工具标识>`;
 
 // ---------------------------------------------------------------- 各命令
 
@@ -285,10 +289,19 @@ async function main() {
     case 'submit': return cmdSubmit(opts);
     case 'query': return cmdQuery(args, opts);
     case 'quota': return cmdQuota(opts);
+    case 'pay': {
+      // 主动充值: 建单 → 终端二维码 → (交互)等到账
+      const { rechargeFlow } = require('./src/pay');
+      const res = await rechargeFlow({ yuan: opts.yuan, channel: opts.channel });
+      return printOk({
+        order_no: res.order.order_no, points: res.order.points,
+        status: res.order.status, paid: !res.pending, pay_url: res.payUrl,
+      });
+    }
     case 'logout': return cmdLogout(opts);
     case 'config': return cmdConfig(args, opts);
     default: throw new UsageError(`未知命令: ${cmd}`);
   }
 }
 
-main().catch(exitWithError);
+main().catch((e) => handleFatal(e, main, { usage: USAGE }));
