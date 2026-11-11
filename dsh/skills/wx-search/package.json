@@ -1,0 +1,10 @@
+{
+  "name": "wx-search",
+  "version": "1.0.0",
+  "private": true,
+  "description": "微信搜一搜（文章）采集 Skill CLI (能力 wx_search, 5 点/页)",
+  "main": "cli.js",
+  "engines": {
+    "node": ">=18"
+  }
+}

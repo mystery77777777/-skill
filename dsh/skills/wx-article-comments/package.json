@@ -1,0 +1,10 @@
+{
+  "name": "wx-article-comments",
+  "version": "1.0.0",
+  "private": true,
+  "description": "公众号文章评论采集 Skill CLI (能力 wx_article_comments, 1 点/页)",
+  "main": "cli.js",
+  "engines": {
+    "node": ">=18"
+  }
+}

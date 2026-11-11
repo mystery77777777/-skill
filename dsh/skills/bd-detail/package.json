@@ -1,0 +1,10 @@
+{
+  "name": "bd-detail",
+  "version": "1.0.0",
+  "private": true,
+  "description": "百度内容详情采集 Skill CLI (百家号文章 / 好看视频, 1 条链接 = 1 点数)",
+  "main": "cli.js",
+  "engines": {
+    "node": ">=18"
+  }
+}

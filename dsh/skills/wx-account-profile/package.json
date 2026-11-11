@@ -1,0 +1,10 @@
+{
+  "name": "wx-account-profile",
+  "version": "1.0.0",
+  "private": true,
+  "description": "公众号基础信息采集 Skill CLI (能力 wx_account_profile, 5 点/条)",
+  "main": "cli.js",
+  "engines": {
+    "node": ">=18"
+  }
+}

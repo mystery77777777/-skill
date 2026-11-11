@@ -1,0 +1,10 @@
+{
+  "name": "dcd-detail",
+  "version": "1.0.0",
+  "private": true,
+  "description": "懂车帝内容详情采集 Skill CLI (资讯/视频/车友圈, 标题+作者+正文+图片, 1 条链接 = 1 点数)",
+  "main": "cli.js",
+  "engines": {
+    "node": ">=18"
+  }
+}

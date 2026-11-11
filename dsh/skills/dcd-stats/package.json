@@ -1,0 +1,10 @@
+{
+  "name": "dcd-hudongshu",
+  "version": "1.0.0",
+  "private": true,
+  "description": "懂车帝互动数采集 Skill CLI (点赞/评论/观看/分享, 车友圈独有分享数, 1 条链接 = 1 点数)",
+  "main": "cli.js",
+  "engines": {
+    "node": ">=18"
+  }
+}

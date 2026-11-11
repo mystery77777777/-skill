@@ -1,0 +1,10 @@
+{
+  "name": "pgy-blogger-search",
+  "version": "1.0.1",
+  "private": true,
+  "description": "蒲公英博主广场搜索采集 Skill CLI (关键词+页数, 一页 20 位博主 = 1 点数, 按实采结算退差)",
+  "main": "cli.js",
+  "engines": {
+    "node": ">=18"
+  }
+}

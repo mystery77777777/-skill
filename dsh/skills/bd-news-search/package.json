@@ -1,0 +1,10 @@
+{
+  "name": "bd-news-search",
+  "version": "1.0.1",
+  "private": true,
+  "description": "百度新闻页文章列表采集 Skill CLI (首页/频道页, 一次页面请求 = 1 页 = 1 点数, 按实采结算退差)",
+  "main": "cli.js",
+  "engines": {
+    "node": ">=18"
+  }
+}
