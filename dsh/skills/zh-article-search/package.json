@@ -1,0 +1,10 @@
+{
+  "name": "zh-article-search",
+  "version": "1.0.0",
+  "private": true,
+  "description": "知乎文章搜索采集 Skill CLI",
+  "main": "cli.js",
+  "engines": {
+    "node": ">=18"
+  }
+}

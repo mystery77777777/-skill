@@ -1,0 +1,10 @@
+{
+  "name": "pgy-note-collect",
+  "version": "1.0.1",
+  "private": true,
+  "description": "蒲公英博主笔记采集 Skill CLI (博主链接+条数, 正文/素材/互动数, 1 条 = 1 点数, 按实采结算退差)",
+  "main": "cli.js",
+  "engines": {
+    "node": ">=18"
+  }
+}

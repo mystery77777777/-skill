@@ -1,0 +1,63 @@
+{
+  "name": "dsh-social-collector",
+  "version": "0.1.0",
+  "description": "Social media data collection skills (Xiaohongshu / Douyin / Kuaishou / Bilibili / Weibo / Zhihu / WeChat / Baidu / Sohu / Pugongying / Autohome / Dongchedi) bundled as a DeepSeek Harness plugin.",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek",
+    "deepseek-harness",
+    "harness",
+    "plugin",
+    "skills",
+    "agent-skills",
+    "social-media",
+    "scraper"
+  ],
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./package.json": "./package.json",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./locale/*.json": "./locale/*.json",
+    "./skills/*": "./skills/*"
+  },
+  "files": [
+    "lib",
+    "skills",
+    "locale",
+    "scripts",
+    "cordis.patch.yml",
+    "icon.svg",
+    "vendor-manifest.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "scripts": {
+    "sync": "node scripts/sync-skills.mjs",
+    "verify": "node scripts/verify.mjs",
+    "prepublishOnly": "node scripts/verify.mjs"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "engines": {
+    "node": ">=20.11.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mystery77777777/-skill.git"
+  },
+  "homepage": "https://github.com/mystery77777777/-skill/tree/HEAD/dsh#readme",
+  "bugs": {
+    "url": "https://github.com/mystery77777777/-skill/issues"
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,19 @@
+# ============================================================================
+# dsh-social-collector — DSH bundle patch
+# ============================================================================
+# This is the plugin's mount declaration. DSH stacks each plugin bundle's patch
+# onto the profile's configuration tree at boot, so this file inserts the skill
+# provider row that publishes the social-media collection skills.
+#
+# Install (from npm):
+#   dsh plugin add dsh-social-collector
+#
+# Install (from a local checkout, while editing the plugin itself):
+#   dsh plugin --profile desktop add link:/absolute/path/to/repo/dsh
+#
+# The package ships no dependencies and no build step, so none of pnpm's
+# `allowBuilds` approvals are needed.
+# ============================================================================
+- insert:
+    - id: social-collector
+      name: dsh-social-collector

@@ -1,0 +1,2112 @@
+{
+  "generator": "dsh/scripts/sync-skills.mjs",
+  "sourceRoot": "skills",
+  "sourceCommit": "def63abe8bf71de65df2bf042155a1a8ca33c3f7",
+  "skills": {
+    "ah-comments": "skills/ah-comments",
+    "ah-detail": "skills/ah-detail",
+    "ah-stats": "skills/ah-stats",
+    "b-collect": "skills/b-collect",
+    "b-comments": "skills/b-comments",
+    "b-profile": "skills/b-profile",
+    "b-search": "skills/b-search",
+    "bd-detail": "skills/bd-detail",
+    "bd-news-search": "skills/bd-news-search",
+    "bd-video-search": "skills/bd-video-search",
+    "dcd-comments": "skills/dcd-comments",
+    "dcd-detail": "skills/dcd-detail",
+    "dcd-hot": "skills/dcd-hot",
+    "dcd-stats": "skills/dcd-stats",
+    "dy-collect": "skills/dy-collect",
+    "dy-comments": "skills/dy-comments",
+    "dy-danmaku": "skills/dy-danmaku",
+    "dy-profile": "skills/dy-profile",
+    "dy-search": "skills/dy-search",
+    "ks-collect": "skills/ks-collect",
+    "ks-comments": "skills/ks-comments",
+    "ks-profile": "skills/ks-profile",
+    "ks-search": "skills/ks-search",
+    "pgy-blogger-detail": "skills/pgy-blogger-detail",
+    "pgy-blogger-search": "skills/pgy-blogger-search",
+    "pgy-note-collect": "skills/pgy-note-collect",
+    "pgy-note-search": "skills/pgy-note-search",
+    "sohu-comments": "skills/sohu-comments",
+    "sohu-detail": "skills/sohu-detail",
+    "sohu-search": "skills/sohu-search",
+    "tt-hot": "skills/tt-hot",
+    "wb-collect": "skills/wb-collect",
+    "wb-comments": "skills/wb-comments",
+    "wb-hot": "skills/wb-hot",
+    "wb-profile": "skills/wb-profile",
+    "wb-search": "skills/wb-search",
+    "wx-account-articles": "skills/wx-account-articles",
+    "wx-account-profile": "skills/wx-account-profile",
+    "wx-article-comments": "skills/wx-article-comments",
+    "wx-article-detail": "skills/wx-article-detail",
+    "wx-article-read": "skills/wx-article-read",
+    "wx-search": "skills/wx-search",
+    "wx-video-comments": "skills/wx-video-comments",
+    "wx-video-list": "skills/wx-video-list",
+    "xhs-comments": "skills/xhs-comments",
+    "xhs-convert-url-pro": "skills/xhs-convert-url-pro",
+    "xhs-dpt": "skills/xhs-dpt",
+    "xhs-hot": "skills/xhs-hot",
+    "xhs-profile": "skills/xhs-profile",
+    "xhs-search": "skills/xhs-search",
+    "xhs-short-url": "skills/xhs-short-url",
+    "zh-huida": "skills/zh-answers",
+    "zh-article-search": "skills/zh-article-search",
+    "zh-zhuanlan": "skills/zh-articles",
+    "zh-pinglun": "skills/zh-comments",
+    "zh-article-detail": "skills/zh-detail",
+    "zh-user-profile": "skills/zh-profile",
+    "zh-keyword-search": "skills/zh-search"
+  },
+  "files": {
+    "skills/ah-comments/cli.js": {
+      "sha256": "3efa5cc21528f15c4da376f236b4eccb92bc420d32ae2a9ff2bdace055fca111",
+      "bytes": 22774,
+      "source": "skills/ah-comments/cli.js"
+    },
+    "skills/ah-comments/package.json": {
+      "sha256": "aa04b81ff2b678c936ea699016eb85205df5ee7d6e94f9a482c09d54deb2e279",
+      "bytes": 275,
+      "source": "skills/ah-comments/package.json"
+    },
+    "skills/ah-comments/SKILL.md": {
+      "sha256": "344065a51243e2ebe97a6965fc1cc19d6a2f26c0684607b68e960d2536268ac4",
+      "bytes": 12959,
+      "source": "skills/ah-comments/SKILL.md"
+    },
+    "skills/ah-comments/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/ah-comments/src/client.js"
+    },
+    "skills/ah-comments/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/ah-comments/src/config.js"
+    },
+    "skills/ah-comments/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/ah-comments/src/output.js"
+    },
+    "skills/ah-comments/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/ah-comments/src/pay.js"
+    },
+    "skills/ah-detail/cli.js": {
+      "sha256": "a301a11b97ee27a01a591a8f9fb5303c7a26c003799d30394661c2b31b027f06",
+      "bytes": 23047,
+      "source": "skills/ah-detail/cli.js"
+    },
+    "skills/ah-detail/package.json": {
+      "sha256": "e9a5108bba1fd78683f2957d25dce0ad146166906cc39b718a66aa931fbd5fc7",
+      "bytes": 282,
+      "source": "skills/ah-detail/package.json"
+    },
+    "skills/ah-detail/SKILL.md": {
+      "sha256": "791fbdc8a50e1114f0eddc44ced902549d3e5bc9d558b8a5055a7e7bc502bc0a",
+      "bytes": 10454,
+      "source": "skills/ah-detail/SKILL.md"
+    },
+    "skills/ah-detail/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/ah-detail/src/client.js"
+    },
+    "skills/ah-detail/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/ah-detail/src/config.js"
+    },
+    "skills/ah-detail/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/ah-detail/src/output.js"
+    },
+    "skills/ah-detail/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/ah-detail/src/pay.js"
+    },
+    "skills/ah-stats/cli.js": {
+      "sha256": "231d360e717de8ba6722302ed5ff1cca4dcc1634f9f695612a984093125b2453",
+      "bytes": 23575,
+      "source": "skills/ah-stats/cli.js"
+    },
+    "skills/ah-stats/package.json": {
+      "sha256": "dafdbebda98ab47cfcfca3efdb91fa1e3a51734578eb41c1e0e0c9c0e935c77d",
+      "bytes": 278,
+      "source": "skills/ah-stats/package.json"
+    },
+    "skills/ah-stats/SKILL.md": {
+      "sha256": "a5efe3640a2f25ff87738cd985b56d0212c1e6d5b77f8c6b96d069788cadad5d",
+      "bytes": 11475,
+      "source": "skills/ah-stats/SKILL.md"
+    },
+    "skills/ah-stats/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/ah-stats/src/client.js"
+    },
+    "skills/ah-stats/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/ah-stats/src/config.js"
+    },
+    "skills/ah-stats/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/ah-stats/src/output.js"
+    },
+    "skills/ah-stats/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/ah-stats/src/pay.js"
+    },
+    "skills/b-collect/cli.js": {
+      "sha256": "207ca97479f3761a57d253cb05262c62f7f8aca1ea16d83e8d9e656d82791af6",
+      "bytes": 20825,
+      "source": "skills/b-collect/cli.js"
+    },
+    "skills/b-collect/package.json": {
+      "sha256": "eb801129b55c8239b7afb084ae110dec8a197bee7ae0668a7ecabb71ab0fd3e6",
+      "bytes": 270,
+      "source": "skills/b-collect/package.json"
+    },
+    "skills/b-collect/SKILL.md": {
+      "sha256": "7e1cc64364092b4fc401cb7a3a593baf951772d82e3753919457560ffb80fb09",
+      "bytes": 16432,
+      "source": "skills/b-collect/SKILL.md"
+    },
+    "skills/b-collect/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/b-collect/src/client.js"
+    },
+    "skills/b-collect/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/b-collect/src/config.js"
+    },
+    "skills/b-collect/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/b-collect/src/output.js"
+    },
+    "skills/b-collect/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/b-collect/src/pay.js"
+    },
+    "skills/b-comments/cli.js": {
+      "sha256": "7c546335f393ba6ed2657b922afadd01e411edf7e57b92634b41aa3321c815f9",
+      "bytes": 22039,
+      "source": "skills/b-comments/cli.js"
+    },
+    "skills/b-comments/package.json": {
+      "sha256": "92e4414c676397bc502c2f14c54769cd3b77f9ed2193e617deecfcf42fdab5d2",
+      "bytes": 257,
+      "source": "skills/b-comments/package.json"
+    },
+    "skills/b-comments/SKILL.md": {
+      "sha256": "d8fa28525ded8a82aee5a046263203a3ea4047dea282509c01e8b9c1f5869e34",
+      "bytes": 23322,
+      "source": "skills/b-comments/SKILL.md"
+    },
+    "skills/b-comments/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/b-comments/src/client.js"
+    },
+    "skills/b-comments/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/b-comments/src/config.js"
+    },
+    "skills/b-comments/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/b-comments/src/output.js"
+    },
+    "skills/b-comments/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/b-comments/src/pay.js"
+    },
+    "skills/b-profile/cli.js": {
+      "sha256": "703fb08f66ec4fd5ab225b1de97646f705e2b1b707a1eb715480843e577c7103",
+      "bytes": 20297,
+      "source": "skills/b-profile/cli.js"
+    },
+    "skills/b-profile/package.json": {
+      "sha256": "f1c0b22bcb87b822fa8b40c0685139c34a9ed1c47c10f3211a05c820f1b54525",
+      "bytes": 257,
+      "source": "skills/b-profile/package.json"
+    },
+    "skills/b-profile/SKILL.md": {
+      "sha256": "e17162d848e424a7c129b1d6cee84498d577d7c5213f4f9d0c057868c19ec0ce",
+      "bytes": 15333,
+      "source": "skills/b-profile/SKILL.md"
+    },
+    "skills/b-profile/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/b-profile/src/client.js"
+    },
+    "skills/b-profile/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/b-profile/src/config.js"
+    },
+    "skills/b-profile/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/b-profile/src/output.js"
+    },
+    "skills/b-profile/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/b-profile/src/pay.js"
+    },
+    "skills/b-search/cli.js": {
+      "sha256": "1bc0eceb7ebc8a65a29b23de5b4a75e9f478c6d5b9e26b84b4310d861b977685",
+      "bytes": 19137,
+      "source": "skills/b-search/cli.js"
+    },
+    "skills/b-search/package.json": {
+      "sha256": "373aabe502c0ed9ef48ede759cba6fbe34c49bb63b3c8078b7daa7840b18b18f",
+      "bytes": 239,
+      "source": "skills/b-search/package.json"
+    },
+    "skills/b-search/SKILL.md": {
+      "sha256": "434d5485d7b440e33a7791be4773d04647e4e8ae217bfcb7c88e302ffc3157fd",
+      "bytes": 14926,
+      "source": "skills/b-search/SKILL.md"
+    },
+    "skills/b-search/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/b-search/src/client.js"
+    },
+    "skills/b-search/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/b-search/src/config.js"
+    },
+    "skills/b-search/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/b-search/src/output.js"
+    },
+    "skills/b-search/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/b-search/src/pay.js"
+    },
+    "skills/bd-detail/cli.js": {
+      "sha256": "26e12b3c0e7d47c28faf18956af3e572a8dd2132e8d42ab94055c799d5b34990",
+      "bytes": 20501,
+      "source": "skills/bd-detail/cli.js"
+    },
+    "skills/bd-detail/package.json": {
+      "sha256": "6dc83e1eaa0416828bbe0c5139d124fdd1ba68c9d60bb19f90b0c571d9c810af",
+      "bytes": 248,
+      "source": "skills/bd-detail/package.json"
+    },
+    "skills/bd-detail/SKILL.md": {
+      "sha256": "9a77d27ff37a24e71527e48bcbd5aec014bb76456d9c5b6d3256a97d82c9e109",
+      "bytes": 10759,
+      "source": "skills/bd-detail/SKILL.md"
+    },
+    "skills/bd-detail/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/bd-detail/src/client.js"
+    },
+    "skills/bd-detail/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/bd-detail/src/config.js"
+    },
+    "skills/bd-detail/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/bd-detail/src/output.js"
+    },
+    "skills/bd-detail/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/bd-detail/src/pay.js"
+    },
+    "skills/bd-news-search/cli.js": {
+      "sha256": "852c49f9536fe36375ca980a92cb0ce7a8cf7e0e91bc3d1250d5edaa45807d34",
+      "bytes": 19167,
+      "source": "skills/bd-news-search/cli.js"
+    },
+    "skills/bd-news-search/package.json": {
+      "sha256": "9ee606d8696100f39e74d15eaf535a4ccc8a464f6ddf3613fd352cc2888fc79b",
+      "bytes": 286,
+      "source": "skills/bd-news-search/package.json"
+    },
+    "skills/bd-news-search/SKILL.md": {
+      "sha256": "0149346b4c43be2fd6630abf943a71d42710c79183de10e559ff65d824c0190a",
+      "bytes": 10881,
+      "source": "skills/bd-news-search/SKILL.md"
+    },
+    "skills/bd-news-search/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/bd-news-search/src/client.js"
+    },
+    "skills/bd-news-search/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/bd-news-search/src/config.js"
+    },
+    "skills/bd-news-search/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/bd-news-search/src/output.js"
+    },
+    "skills/bd-news-search/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/bd-news-search/src/pay.js"
+    },
+    "skills/bd-video-search/cli.js": {
+      "sha256": "6398498df4ae0b8fba16e066c07caa903beb1047ffc74ba722338c01eb116d00",
+      "bytes": 18096,
+      "source": "skills/bd-video-search/cli.js"
+    },
+    "skills/bd-video-search/package.json": {
+      "sha256": "c4426957af5c3a0a8a78ece2a7b0e535ef9a531157dad1e1afeb29a4a0ef7422",
+      "bytes": 250,
+      "source": "skills/bd-video-search/package.json"
+    },
+    "skills/bd-video-search/SKILL.md": {
+      "sha256": "0e75d6c091f83a69aa88e5a2fc3ec0b84ecc97da233438c7abcbf67cafaafe13",
+      "bytes": 9820,
+      "source": "skills/bd-video-search/SKILL.md"
+    },
+    "skills/bd-video-search/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/bd-video-search/src/client.js"
+    },
+    "skills/bd-video-search/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/bd-video-search/src/config.js"
+    },
+    "skills/bd-video-search/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/bd-video-search/src/output.js"
+    },
+    "skills/bd-video-search/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/bd-video-search/src/pay.js"
+    },
+    "skills/dcd-comments/cli.js": {
+      "sha256": "c15d1bbb82bbd8934d766568f72f6f14f0eb8f46f0fa3042c94405640d22d9f4",
+      "bytes": 21949,
+      "source": "skills/dcd-comments/cli.js"
+    },
+    "skills/dcd-comments/package.json": {
+      "sha256": "80de8bb27772f08da3dc44910f99dec3dcd344329b4bcd028bf7d47e85aa2157",
+      "bytes": 252,
+      "source": "skills/dcd-comments/package.json"
+    },
+    "skills/dcd-comments/SKILL.md": {
+      "sha256": "544624c4061c1774bd70a1b49605df1be3a1be4e0cee1c7b64f5b1c5bcfa8a38",
+      "bytes": 14648,
+      "source": "skills/dcd-comments/SKILL.md"
+    },
+    "skills/dcd-comments/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/dcd-comments/src/client.js"
+    },
+    "skills/dcd-comments/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/dcd-comments/src/config.js"
+    },
+    "skills/dcd-comments/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/dcd-comments/src/output.js"
+    },
+    "skills/dcd-comments/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/dcd-comments/src/pay.js"
+    },
+    "skills/dcd-detail/cli.js": {
+      "sha256": "74babb049b585c594176c4e562d85845c68bd583b128fbaeba6f449566cd7e76",
+      "bytes": 23099,
+      "source": "skills/dcd-detail/cli.js"
+    },
+    "skills/dcd-detail/package.json": {
+      "sha256": "79d0145f893af8d12f3304b556a6ee27332c0e90843053eaa7a94aa5ad3094e3",
+      "bytes": 274,
+      "source": "skills/dcd-detail/package.json"
+    },
+    "skills/dcd-detail/SKILL.md": {
+      "sha256": "edfa1aa82e9aae4a8c4cbba63a601ccf833d7905e1e6a9977600649ce7b8410f",
+      "bytes": 11918,
+      "source": "skills/dcd-detail/SKILL.md"
+    },
+    "skills/dcd-detail/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/dcd-detail/src/client.js"
+    },
+    "skills/dcd-detail/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/dcd-detail/src/config.js"
+    },
+    "skills/dcd-detail/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/dcd-detail/src/output.js"
+    },
+    "skills/dcd-detail/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/dcd-detail/src/pay.js"
+    },
+    "skills/dcd-hot/cli.js": {
+      "sha256": "c1038c7e8f35427b2f0a89b66000c4a3d0a332f4bd6d4b751fa6032d5fc54144",
+      "bytes": 13132,
+      "source": "skills/dcd-hot/cli.js"
+    },
+    "skills/dcd-hot/package.json": {
+      "sha256": "1852c6d4b01f3fd373c16a4a702927a0feaf5d2d753609475c9280a47b5fb4d6",
+      "bytes": 261,
+      "source": "skills/dcd-hot/package.json"
+    },
+    "skills/dcd-hot/SKILL.md": {
+      "sha256": "6ecb316840eca61585dc5c65b30a144cc6e553968892858a0eda89ec787451fb",
+      "bytes": 7172,
+      "source": "skills/dcd-hot/SKILL.md"
+    },
+    "skills/dcd-hot/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/dcd-hot/src/client.js"
+    },
+    "skills/dcd-hot/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/dcd-hot/src/config.js"
+    },
+    "skills/dcd-hot/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/dcd-hot/src/output.js"
+    },
+    "skills/dcd-hot/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/dcd-hot/src/pay.js"
+    },
+    "skills/dcd-stats/cli.js": {
+      "sha256": "3e8879c2e2b6e7ce934e7b4018b43479fe22468062560fb8c8be206316ef6e54",
+      "bytes": 23847,
+      "source": "skills/dcd-stats/cli.js"
+    },
+    "skills/dcd-stats/dab1a112b1733223ee85bbe4fd8b22d6.jpg": {
+      "sha256": "be56341e2d5413003a5604f541b1137b8c01ad20b33eeb45f01b0fbdd549ec13",
+      "bytes": 137213,
+      "source": "skills/dcd-stats/dab1a112b1733223ee85bbe4fd8b22d6.jpg"
+    },
+    "skills/dcd-stats/package.json": {
+      "sha256": "4a671aa1c5df9480ae9210dad956cfc702db7c5cf28c3fb823443479c539cffc",
+      "bytes": 275,
+      "source": "skills/dcd-stats/package.json"
+    },
+    "skills/dcd-stats/SKILL.md": {
+      "sha256": "27f6bf77d43fff998351ddef237908fe09058fa56a5b442606c72ae039e9646e",
+      "bytes": 11247,
+      "source": "skills/dcd-stats/SKILL.md"
+    },
+    "skills/dcd-stats/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/dcd-stats/src/client.js"
+    },
+    "skills/dcd-stats/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/dcd-stats/src/config.js"
+    },
+    "skills/dcd-stats/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/dcd-stats/src/output.js"
+    },
+    "skills/dcd-stats/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/dcd-stats/src/pay.js"
+    },
+    "skills/dy-collect/cli.js": {
+      "sha256": "0221de1c27b214c62c505d162bce7a1fdbdca927ca400a87e67c34af1cd7d05e",
+      "bytes": 19127,
+      "source": "skills/dy-collect/cli.js"
+    },
+    "skills/dy-collect/package.json": {
+      "sha256": "d43ca61070e5b46eb499fe4809b92f3ccd717a37936f9becbc59615a74c86173",
+      "bytes": 259,
+      "source": "skills/dy-collect/package.json"
+    },
+    "skills/dy-collect/SKILL.md": {
+      "sha256": "942b4112f1f0cc22fd419168537d75762686958e9b2c26a8d463fc5ca1244788",
+      "bytes": 16025,
+      "source": "skills/dy-collect/SKILL.md"
+    },
+    "skills/dy-collect/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/dy-collect/src/client.js"
+    },
+    "skills/dy-collect/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/dy-collect/src/config.js"
+    },
+    "skills/dy-collect/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/dy-collect/src/output.js"
+    },
+    "skills/dy-collect/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/dy-collect/src/pay.js"
+    },
+    "skills/dy-comments/cli.js": {
+      "sha256": "46a315502fb72bbfc291a281a5da90e850990c463b05461f916a32bce99661e2",
+      "bytes": 19430,
+      "source": "skills/dy-comments/cli.js"
+    },
+    "skills/dy-comments/package.json": {
+      "sha256": "e574c494b29035e84274792926ead95c521a39886bda37b3d4781e3b4a7a4e77",
+      "bytes": 266,
+      "source": "skills/dy-comments/package.json"
+    },
+    "skills/dy-comments/SKILL.md": {
+      "sha256": "af07fb3869e82e435dc5d1d7ff80edff77f1720279bfd6880d4b03222726bf69",
+      "bytes": 22574,
+      "source": "skills/dy-comments/SKILL.md"
+    },
+    "skills/dy-comments/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/dy-comments/src/client.js"
+    },
+    "skills/dy-comments/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/dy-comments/src/config.js"
+    },
+    "skills/dy-comments/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/dy-comments/src/output.js"
+    },
+    "skills/dy-comments/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/dy-comments/src/pay.js"
+    },
+    "skills/dy-danmaku/cli.js": {
+      "sha256": "4f49198cafed85f0d57e47bc8848b195fa8ba9669cf4afb64edc0cf39b34034d",
+      "bytes": 12797,
+      "source": "skills/dy-danmaku/cli.js"
+    },
+    "skills/dy-danmaku/package.json": {
+      "sha256": "93018069a629f05561df0cd013ca25a60a94169e4672517ea00803b509f685d9",
+      "bytes": 263,
+      "source": "skills/dy-danmaku/package.json"
+    },
+    "skills/dy-danmaku/SKILL.md": {
+      "sha256": "5148092e56d378f4fca86491bdb926b75fed4a7054ff8988950dace3d8b1ccbb",
+      "bytes": 6767,
+      "source": "skills/dy-danmaku/SKILL.md"
+    },
+    "skills/dy-danmaku/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/dy-danmaku/src/client.js"
+    },
+    "skills/dy-danmaku/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/dy-danmaku/src/config.js"
+    },
+    "skills/dy-danmaku/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/dy-danmaku/src/output.js"
+    },
+    "skills/dy-danmaku/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/dy-danmaku/src/pay.js"
+    },
+    "skills/dy-profile/cli.js": {
+      "sha256": "615bacd7bbf9c1c0efefc0d5288f11827cf6009b30f113e9aca52d0a2528680f",
+      "bytes": 20389,
+      "source": "skills/dy-profile/cli.js"
+    },
+    "skills/dy-profile/package.json": {
+      "sha256": "12f6a51664ae636e4437bde3c623e365d7c84842eafc0e97333f6efcd08f0bd9",
+      "bytes": 265,
+      "source": "skills/dy-profile/package.json"
+    },
+    "skills/dy-profile/SKILL.md": {
+      "sha256": "72b4d1262db0fae8eb88cd0fa1dd9011170ee0681d74f9e93e180b528b49956a",
+      "bytes": 16583,
+      "source": "skills/dy-profile/SKILL.md"
+    },
+    "skills/dy-profile/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/dy-profile/src/client.js"
+    },
+    "skills/dy-profile/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/dy-profile/src/config.js"
+    },
+    "skills/dy-profile/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/dy-profile/src/output.js"
+    },
+    "skills/dy-profile/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/dy-profile/src/pay.js"
+    },
+    "skills/dy-search/cli.js": {
+      "sha256": "8806ab0f55371b351aee6ef8dd865a4d80d3ac45971ada5e0b902767ba97a6b8",
+      "bytes": 20274,
+      "source": "skills/dy-search/cli.js"
+    },
+    "skills/dy-search/package.json": {
+      "sha256": "293d0f84048a719fe17ca4de1d34c05b8c9ea4e796075ba919dc13885abb5c4e",
+      "bytes": 276,
+      "source": "skills/dy-search/package.json"
+    },
+    "skills/dy-search/SKILL.md": {
+      "sha256": "1073703745f3844976042f334ca72d9fd58f58af1d62881e749c09e3c8a442fa",
+      "bytes": 17314,
+      "source": "skills/dy-search/SKILL.md"
+    },
+    "skills/dy-search/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/dy-search/src/client.js"
+    },
+    "skills/dy-search/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/dy-search/src/config.js"
+    },
+    "skills/dy-search/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/dy-search/src/output.js"
+    },
+    "skills/dy-search/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/dy-search/src/pay.js"
+    },
+    "skills/ks-collect/cli.js": {
+      "sha256": "389ddf290f70cf20e60e9e42e94c0fb77c5e8c72ad858c45b150be5a0ac2281e",
+      "bytes": 19293,
+      "source": "skills/ks-collect/cli.js"
+    },
+    "skills/ks-collect/package.json": {
+      "sha256": "a3b0eb04aed7ed939058f46628fa7a422621b9bcd330efbfea3e086c192d7489",
+      "bytes": 260,
+      "source": "skills/ks-collect/package.json"
+    },
+    "skills/ks-collect/SKILL.md": {
+      "sha256": "f390a144d38124286d015f2632e03b19c2c38e2e36bf4ecc3b6343e27927c0b3",
+      "bytes": 16071,
+      "source": "skills/ks-collect/SKILL.md"
+    },
+    "skills/ks-collect/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/ks-collect/src/client.js"
+    },
+    "skills/ks-collect/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/ks-collect/src/config.js"
+    },
+    "skills/ks-collect/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/ks-collect/src/output.js"
+    },
+    "skills/ks-collect/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/ks-collect/src/pay.js"
+    },
+    "skills/ks-comments/cli.js": {
+      "sha256": "2774a0e1ee9cf3e9df164809f1b8f5fcf471dec1eae170d8b955cd28ba68b05b",
+      "bytes": 19458,
+      "source": "skills/ks-comments/cli.js"
+    },
+    "skills/ks-comments/package.json": {
+      "sha256": "93cfb9fc95a4afd7dd6cccd5989e4ce828038590cd33631c42472673ca1f488b",
+      "bytes": 226,
+      "source": "skills/ks-comments/package.json"
+    },
+    "skills/ks-comments/SKILL.md": {
+      "sha256": "c3ef6d75ca4e476b238beec383903447f42f3bb47f1e356e45f260d2aa893b6f",
+      "bytes": 22827,
+      "source": "skills/ks-comments/SKILL.md"
+    },
+    "skills/ks-comments/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/ks-comments/src/client.js"
+    },
+    "skills/ks-comments/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/ks-comments/src/config.js"
+    },
+    "skills/ks-comments/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/ks-comments/src/output.js"
+    },
+    "skills/ks-comments/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/ks-comments/src/pay.js"
+    },
+    "skills/ks-profile/cli.js": {
+      "sha256": "50b291890c565c6620396799c4361bf6a6683f439a8979455565f110fbc4494a",
+      "bytes": 20267,
+      "source": "skills/ks-profile/cli.js"
+    },
+    "skills/ks-profile/package.json": {
+      "sha256": "3d3742d32ba9a817ed5c4812e6773f50ff463af11917871a39e114c815b5b6d0",
+      "bytes": 259,
+      "source": "skills/ks-profile/package.json"
+    },
+    "skills/ks-profile/SKILL.md": {
+      "sha256": "bfc406a0126fafdb7ef400e6f94b94e73316dfef3ba889b9c0e46386e16fa2e4",
+      "bytes": 16556,
+      "source": "skills/ks-profile/SKILL.md"
+    },
+    "skills/ks-profile/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/ks-profile/src/client.js"
+    },
+    "skills/ks-profile/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/ks-profile/src/config.js"
+    },
+    "skills/ks-profile/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/ks-profile/src/output.js"
+    },
+    "skills/ks-profile/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/ks-profile/src/pay.js"
+    },
+    "skills/ks-search/cli.js": {
+      "sha256": "3c9bce5ba8c1d1dc61481980b709948ec236c9a94ce0cc3e70043f623ecf1b8e",
+      "bytes": 19077,
+      "source": "skills/ks-search/cli.js"
+    },
+    "skills/ks-search/package.json": {
+      "sha256": "f3f76770480f107e3595da54cf5786293c046508a9098c7d1ccb110d350ffdba",
+      "bytes": 246,
+      "source": "skills/ks-search/package.json"
+    },
+    "skills/ks-search/SKILL.md": {
+      "sha256": "ce701f7246a0d44181ebfa66e76de9d2fbec7b1f887d8be7339807e44359d3c7",
+      "bytes": 16974,
+      "source": "skills/ks-search/SKILL.md"
+    },
+    "skills/ks-search/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/ks-search/src/client.js"
+    },
+    "skills/ks-search/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/ks-search/src/config.js"
+    },
+    "skills/ks-search/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/ks-search/src/output.js"
+    },
+    "skills/ks-search/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/ks-search/src/pay.js"
+    },
+    "skills/pgy-blogger-detail/cli.js": {
+      "sha256": "ff7fd8a0d4788106f86c4ec4f04efc8e3405e86c10194ce4b7889cf01f989126",
+      "bytes": 23001,
+      "source": "skills/pgy-blogger-detail/cli.js"
+    },
+    "skills/pgy-blogger-detail/package.json": {
+      "sha256": "9d0f7a614ce7520521828f996e1833a05d8c4391d8b1ff5a22a1a19e57fffd69",
+      "bytes": 266,
+      "source": "skills/pgy-blogger-detail/package.json"
+    },
+    "skills/pgy-blogger-detail/SKILL.md": {
+      "sha256": "321a8ab717b75161cc9e95ac7b75c3b1d157674f9cc99a4fa55cc19d6a7e2e9e",
+      "bytes": 13009,
+      "source": "skills/pgy-blogger-detail/SKILL.md"
+    },
+    "skills/pgy-blogger-detail/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/pgy-blogger-detail/src/client.js"
+    },
+    "skills/pgy-blogger-detail/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/pgy-blogger-detail/src/config.js"
+    },
+    "skills/pgy-blogger-detail/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/pgy-blogger-detail/src/output.js"
+    },
+    "skills/pgy-blogger-detail/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/pgy-blogger-detail/src/pay.js"
+    },
+    "skills/pgy-blogger-search/cli.js": {
+      "sha256": "5a2b945bb4a0e0670e36a63495d9cb332cd868f5c476d2cb51ed0e7bceeab337",
+      "bytes": 20516,
+      "source": "skills/pgy-blogger-search/cli.js"
+    },
+    "skills/pgy-blogger-search/package.json": {
+      "sha256": "3241b01e74d3fd8652fd871331502e45b39be9fd60c9c31fe9e1fd668e345436",
+      "bytes": 283,
+      "source": "skills/pgy-blogger-search/package.json"
+    },
+    "skills/pgy-blogger-search/SKILL.md": {
+      "sha256": "854f25e97db97094f325da7d51fcc484c0b99b661f364eb9fe5b35a4f5aa647e",
+      "bytes": 13134,
+      "source": "skills/pgy-blogger-search/SKILL.md"
+    },
+    "skills/pgy-blogger-search/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/pgy-blogger-search/src/client.js"
+    },
+    "skills/pgy-blogger-search/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/pgy-blogger-search/src/config.js"
+    },
+    "skills/pgy-blogger-search/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/pgy-blogger-search/src/output.js"
+    },
+    "skills/pgy-blogger-search/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/pgy-blogger-search/src/pay.js"
+    },
+    "skills/pgy-note-collect/cli.js": {
+      "sha256": "306b8c7655ce71668488f2934a0ae7a5af4d623c9d249d7aff95648959754cc9",
+      "bytes": 23217,
+      "source": "skills/pgy-note-collect/cli.js"
+    },
+    "skills/pgy-note-collect/package.json": {
+      "sha256": "b33742c2cb18224847fa5bf8828a1a08fa45623b84f42283bc1e193655bc580c",
+      "bytes": 289,
+      "source": "skills/pgy-note-collect/package.json"
+    },
+    "skills/pgy-note-collect/SKILL.md": {
+      "sha256": "cd091e6cf997d0847918bc4fc3adc7f92d5d5db1ce556ddf18c03fe241677676",
+      "bytes": 12728,
+      "source": "skills/pgy-note-collect/SKILL.md"
+    },
+    "skills/pgy-note-collect/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/pgy-note-collect/src/client.js"
+    },
+    "skills/pgy-note-collect/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/pgy-note-collect/src/config.js"
+    },
+    "skills/pgy-note-collect/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/pgy-note-collect/src/output.js"
+    },
+    "skills/pgy-note-collect/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/pgy-note-collect/src/pay.js"
+    },
+    "skills/pgy-note-search/cli.js": {
+      "sha256": "091d5e86c55a94e3fa8cc9e3e745b2b02c9b395065b95c58fcfca5a7f12b640a",
+      "bytes": 19500,
+      "source": "skills/pgy-note-search/cli.js"
+    },
+    "skills/pgy-note-search/package.json": {
+      "sha256": "f351c9f3ae039129897e0558203d12033ceb53f3321c8561bb979a3e9aec8027",
+      "bytes": 280,
+      "source": "skills/pgy-note-search/package.json"
+    },
+    "skills/pgy-note-search/SKILL.md": {
+      "sha256": "49571d220ded81edc770bf998508d8bb4443f32b5f685c9986465c0ffee77c0e",
+      "bytes": 11846,
+      "source": "skills/pgy-note-search/SKILL.md"
+    },
+    "skills/pgy-note-search/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/pgy-note-search/src/client.js"
+    },
+    "skills/pgy-note-search/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/pgy-note-search/src/config.js"
+    },
+    "skills/pgy-note-search/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/pgy-note-search/src/output.js"
+    },
+    "skills/pgy-note-search/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/pgy-note-search/src/pay.js"
+    },
+    "skills/sohu-comments/cli.js": {
+      "sha256": "40554137c6a9280cdf9f284b4507cdebd7d54643da8eec468f0dc774ade94570",
+      "bytes": 18933,
+      "source": "skills/sohu-comments/cli.js"
+    },
+    "skills/sohu-comments/package.json": {
+      "sha256": "a4457c553c1e4d1248f304a10e622977fc176a455cd0cecb2dc72241f153f9f3",
+      "bytes": 248,
+      "source": "skills/sohu-comments/package.json"
+    },
+    "skills/sohu-comments/SKILL.md": {
+      "sha256": "e16a967c9393d07d3a2c7d6f475a980e0ba82be190479cf15b218fc4ca6c0928",
+      "bytes": 12466,
+      "source": "skills/sohu-comments/SKILL.md"
+    },
+    "skills/sohu-comments/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/sohu-comments/src/client.js"
+    },
+    "skills/sohu-comments/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/sohu-comments/src/config.js"
+    },
+    "skills/sohu-comments/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/sohu-comments/src/output.js"
+    },
+    "skills/sohu-comments/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/sohu-comments/src/pay.js"
+    },
+    "skills/sohu-detail/cli.js": {
+      "sha256": "47de90122ea1bbe4e91bf34f4f6763e0cbebf0a62f152bc2b6248a6b2d7b4491",
+      "bytes": 20443,
+      "source": "skills/sohu-detail/cli.js"
+    },
+    "skills/sohu-detail/package.json": {
+      "sha256": "82a20a1f8582486368c679acbb3a14504523521154640d28682ed24adc1f09be",
+      "bytes": 257,
+      "source": "skills/sohu-detail/package.json"
+    },
+    "skills/sohu-detail/SKILL.md": {
+      "sha256": "fb5ef6088c3a4bbf7563a85093056bf71c2adf73454972de28cccdbcc7b5e751",
+      "bytes": 8974,
+      "source": "skills/sohu-detail/SKILL.md"
+    },
+    "skills/sohu-detail/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/sohu-detail/src/client.js"
+    },
+    "skills/sohu-detail/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/sohu-detail/src/config.js"
+    },
+    "skills/sohu-detail/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/sohu-detail/src/output.js"
+    },
+    "skills/sohu-detail/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/sohu-detail/src/pay.js"
+    },
+    "skills/sohu-search/cli.js": {
+      "sha256": "891460f2f495025d14348cd07dfa90a4964986f6ba4305a96cc987c2f603d7b6",
+      "bytes": 18031,
+      "source": "skills/sohu-search/cli.js"
+    },
+    "skills/sohu-search/package.json": {
+      "sha256": "1da3b0c7b0a915da28f2aa14fb1258679e2263621466f8c970761527cc642020",
+      "bytes": 249,
+      "source": "skills/sohu-search/package.json"
+    },
+    "skills/sohu-search/SKILL.md": {
+      "sha256": "8182800999b72aee57d7b9203f0b34f1c433c7ba0a0fa2159a8f2139ab570e97",
+      "bytes": 8849,
+      "source": "skills/sohu-search/SKILL.md"
+    },
+    "skills/sohu-search/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/sohu-search/src/client.js"
+    },
+    "skills/sohu-search/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/sohu-search/src/config.js"
+    },
+    "skills/sohu-search/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/sohu-search/src/output.js"
+    },
+    "skills/sohu-search/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/sohu-search/src/pay.js"
+    },
+    "skills/tt-hot/cli.js": {
+      "sha256": "95b9ed1c8a7f9acfcb00e3df79a38d489777f427bd30d75ef13d285575d6b930",
+      "bytes": 13148,
+      "source": "skills/tt-hot/cli.js"
+    },
+    "skills/tt-hot/package.json": {
+      "sha256": "0c0159b4e7bf1bafffc065b6fe08f40356c48bc065bfca34887ac2e216ec0f7f",
+      "bytes": 263,
+      "source": "skills/tt-hot/package.json"
+    },
+    "skills/tt-hot/SKILL.md": {
+      "sha256": "eeb1422de905ff0807564e51b4f1babde20464089784254623d46666095b176b",
+      "bytes": 7134,
+      "source": "skills/tt-hot/SKILL.md"
+    },
+    "skills/tt-hot/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/tt-hot/src/client.js"
+    },
+    "skills/tt-hot/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/tt-hot/src/config.js"
+    },
+    "skills/tt-hot/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/tt-hot/src/output.js"
+    },
+    "skills/tt-hot/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/tt-hot/src/pay.js"
+    },
+    "skills/wb-collect/cli.js": {
+      "sha256": "f802442a00ff8b8fcc3ba016f8e34349457a167baa17b712f608abbf23026752",
+      "bytes": 20568,
+      "source": "skills/wb-collect/cli.js"
+    },
+    "skills/wb-collect/package.json": {
+      "sha256": "6a8b65c86cee772af7037b54f4e4f7de5879f72c5a51fe40e918b895ebe7aeae",
+      "bytes": 265,
+      "source": "skills/wb-collect/package.json"
+    },
+    "skills/wb-collect/SKILL.md": {
+      "sha256": "2baa58255a96202e82087b428f4a05974fa617b394293162e4f1909736c01969",
+      "bytes": 16151,
+      "source": "skills/wb-collect/SKILL.md"
+    },
+    "skills/wb-collect/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/wb-collect/src/client.js"
+    },
+    "skills/wb-collect/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/wb-collect/src/config.js"
+    },
+    "skills/wb-collect/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/wb-collect/src/output.js"
+    },
+    "skills/wb-collect/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/wb-collect/src/pay.js"
+    },
+    "skills/wb-comments/cli.js": {
+      "sha256": "863a332f7f5c022e39fc3ab42f816adcf927d208d453e9743bde2583f073466c",
+      "bytes": 19436,
+      "source": "skills/wb-comments/cli.js"
+    },
+    "skills/wb-comments/package.json": {
+      "sha256": "3b5bf235bebacb6af8687222ef6762e6f7b47cc6a128fe70fae702657595aaec",
+      "bytes": 260,
+      "source": "skills/wb-comments/package.json"
+    },
+    "skills/wb-comments/SKILL.md": {
+      "sha256": "584d354893466203dcd70374dc4bfbf4833576455c10ab23b73e80b39dff6a1f",
+      "bytes": 12395,
+      "source": "skills/wb-comments/SKILL.md"
+    },
+    "skills/wb-comments/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/wb-comments/src/client.js"
+    },
+    "skills/wb-comments/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/wb-comments/src/config.js"
+    },
+    "skills/wb-comments/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/wb-comments/src/output.js"
+    },
+    "skills/wb-comments/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/wb-comments/src/pay.js"
+    },
+    "skills/wb-hot/cli.js": {
+      "sha256": "148256a0f975d7059bf02aacca55d65a8b0d2cff24e92412bb59879d632aafd6",
+      "bytes": 13122,
+      "source": "skills/wb-hot/cli.js"
+    },
+    "skills/wb-hot/package.json": {
+      "sha256": "5cd4cb39b645da0f639b9264acb3bc47a012adfa4286e96c45385226cc74244b",
+      "bytes": 263,
+      "source": "skills/wb-hot/package.json"
+    },
+    "skills/wb-hot/SKILL.md": {
+      "sha256": "42d443e6132f3bfc7efd96d6e4c136fd3bc0d5fc091556795ed01c5ff9991c24",
+      "bytes": 7268,
+      "source": "skills/wb-hot/SKILL.md"
+    },
+    "skills/wb-hot/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/wb-hot/src/client.js"
+    },
+    "skills/wb-hot/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/wb-hot/src/config.js"
+    },
+    "skills/wb-hot/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/wb-hot/src/output.js"
+    },
+    "skills/wb-hot/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/wb-hot/src/pay.js"
+    },
+    "skills/wb-profile/cli.js": {
+      "sha256": "11648787860f27a5c6393c569bac1a54e2e0fa35d71ec2cfdd1c702567191afe",
+      "bytes": 20495,
+      "source": "skills/wb-profile/cli.js"
+    },
+    "skills/wb-profile/package.json": {
+      "sha256": "1f1363d2f8175c53f97e47c17b90e34bd19a97e2ef43a9dd931f56ef0832dab4",
+      "bytes": 259,
+      "source": "skills/wb-profile/package.json"
+    },
+    "skills/wb-profile/SKILL.md": {
+      "sha256": "1e0835007ac8e1bbc7c8a8a223fbf74c94b8081b6376ce70faf998901d8cdac2",
+      "bytes": 11423,
+      "source": "skills/wb-profile/SKILL.md"
+    },
+    "skills/wb-profile/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/wb-profile/src/client.js"
+    },
+    "skills/wb-profile/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/wb-profile/src/config.js"
+    },
+    "skills/wb-profile/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/wb-profile/src/output.js"
+    },
+    "skills/wb-profile/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/wb-profile/src/pay.js"
+    },
+    "skills/wb-search/cli.js": {
+      "sha256": "cfd13b73752ce3b44739760b6edd9c3f168fd8597cb3016fea1f65dc0d649748",
+      "bytes": 21788,
+      "source": "skills/wb-search/cli.js"
+    },
+    "skills/wb-search/package.json": {
+      "sha256": "7540071437692d7cfe5c09b6ce16afb06997b9e7aef540cdebc3542d5c9c6caa",
+      "bytes": 278,
+      "source": "skills/wb-search/package.json"
+    },
+    "skills/wb-search/SKILL.md": {
+      "sha256": "d3c7934dbba134dbbd51f0632f53694085109467283fcdf37aa849378b3b13a9",
+      "bytes": 12512,
+      "source": "skills/wb-search/SKILL.md"
+    },
+    "skills/wb-search/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/wb-search/src/client.js"
+    },
+    "skills/wb-search/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/wb-search/src/config.js"
+    },
+    "skills/wb-search/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/wb-search/src/output.js"
+    },
+    "skills/wb-search/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/wb-search/src/pay.js"
+    },
+    "skills/wx-account-articles/cli.js": {
+      "sha256": "abd4b1eab8e3305256da5d70861445b8f81bf1207cf09592b6c6976fe69a9938",
+      "bytes": 21421,
+      "source": "skills/wx-account-articles/cli.js"
+    },
+    "skills/wx-account-articles/package.json": {
+      "sha256": "1b359c8aec17f3ca94d14cb28aee13beb3565642edac5b0c4fec4270f8f73f7a",
+      "bytes": 244,
+      "source": "skills/wx-account-articles/package.json"
+    },
+    "skills/wx-account-articles/SKILL.md": {
+      "sha256": "b4b36049286b9b308358cfa31b03e8aca5000a8fb07b50abe66dd02d2f02f9bf",
+      "bytes": 9898,
+      "source": "skills/wx-account-articles/SKILL.md"
+    },
+    "skills/wx-account-articles/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/wx-account-articles/src/client.js"
+    },
+    "skills/wx-account-articles/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/wx-account-articles/src/config.js"
+    },
+    "skills/wx-account-articles/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/wx-account-articles/src/output.js"
+    },
+    "skills/wx-account-articles/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/wx-account-articles/src/pay.js"
+    },
+    "skills/wx-account-profile/cli.js": {
+      "sha256": "56b02350c44725c0b1eeacac710756ebd85f43388ae3e575c426ee211d9c7726",
+      "bytes": 20660,
+      "source": "skills/wx-account-profile/cli.js"
+    },
+    "skills/wx-account-profile/package.json": {
+      "sha256": "6f249f8f13ec1f73917fdc1cda9bf8036bf3dde9fc32fbb4ca59154a629ebf1b",
+      "bytes": 242,
+      "source": "skills/wx-account-profile/package.json"
+    },
+    "skills/wx-account-profile/SKILL.md": {
+      "sha256": "d6f1b2b640a7dac42a311d12d1fd6650229fe23802a7288d134808ac929631d7",
+      "bytes": 8856,
+      "source": "skills/wx-account-profile/SKILL.md"
+    },
+    "skills/wx-account-profile/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/wx-account-profile/src/client.js"
+    },
+    "skills/wx-account-profile/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/wx-account-profile/src/config.js"
+    },
+    "skills/wx-account-profile/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/wx-account-profile/src/output.js"
+    },
+    "skills/wx-account-profile/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/wx-account-profile/src/pay.js"
+    },
+    "skills/wx-article-comments/cli.js": {
+      "sha256": "ad9efe581d8488f8c63f0afb887360415fb5ca3bbe86d2e95c453343b3361524",
+      "bytes": 21163,
+      "source": "skills/wx-article-comments/cli.js"
+    },
+    "skills/wx-article-comments/package.json": {
+      "sha256": "e7f5eeae8dedd17817a9ba224e0e73c95f1d4a9286dc81cf80ee5494da5cce7a",
+      "bytes": 244,
+      "source": "skills/wx-article-comments/package.json"
+    },
+    "skills/wx-article-comments/SKILL.md": {
+      "sha256": "44511c6eb79012c51f6361fdb2fba4954bafda075454e32b95a2ae895ab03af0",
+      "bytes": 9409,
+      "source": "skills/wx-article-comments/SKILL.md"
+    },
+    "skills/wx-article-comments/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/wx-article-comments/src/client.js"
+    },
+    "skills/wx-article-comments/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/wx-article-comments/src/config.js"
+    },
+    "skills/wx-article-comments/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/wx-article-comments/src/output.js"
+    },
+    "skills/wx-article-comments/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/wx-article-comments/src/pay.js"
+    },
+    "skills/wx-article-detail/cli.js": {
+      "sha256": "b6acf10a23acd2031aa897b349beefcbb1d3cf971a5c7584d3156a314ef8e680",
+      "bytes": 21027,
+      "source": "skills/wx-article-detail/cli.js"
+    },
+    "skills/wx-article-detail/package.json": {
+      "sha256": "5fee535246b0dce89d1d07ad03425c193adb6fa170565960e7dbbe0f400b0c9c",
+      "bytes": 240,
+      "source": "skills/wx-article-detail/package.json"
+    },
+    "skills/wx-article-detail/SKILL.md": {
+      "sha256": "49eaf8d291609b7dba4899369506f3a60dc9d20fd53f92fee45e73ca1dadf9c3",
+      "bytes": 9136,
+      "source": "skills/wx-article-detail/SKILL.md"
+    },
+    "skills/wx-article-detail/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/wx-article-detail/src/client.js"
+    },
+    "skills/wx-article-detail/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/wx-article-detail/src/config.js"
+    },
+    "skills/wx-article-detail/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/wx-article-detail/src/output.js"
+    },
+    "skills/wx-article-detail/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/wx-article-detail/src/pay.js"
+    },
+    "skills/wx-article-read/cli.js": {
+      "sha256": "cba12e957750b0821547b370d24e5271a151742d45fae4385e977032964564e7",
+      "bytes": 21370,
+      "source": "skills/wx-article-read/cli.js"
+    },
+    "skills/wx-article-read/package.json": {
+      "sha256": "c3c3c2c168363da5ea16823dead2e570f30a805a02ab6b0d48a3949d810080f6",
+      "bytes": 239,
+      "source": "skills/wx-article-read/package.json"
+    },
+    "skills/wx-article-read/SKILL.md": {
+      "sha256": "45e85ceab4e67b99f5b5e459ec35e8d5e12807f6c2d15fb00f237bdd495c34d8",
+      "bytes": 9061,
+      "source": "skills/wx-article-read/SKILL.md"
+    },
+    "skills/wx-article-read/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/wx-article-read/src/client.js"
+    },
+    "skills/wx-article-read/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/wx-article-read/src/config.js"
+    },
+    "skills/wx-article-read/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/wx-article-read/src/output.js"
+    },
+    "skills/wx-article-read/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/wx-article-read/src/pay.js"
+    },
+    "skills/wx-search/cli.js": {
+      "sha256": "5fee1c18e001114a845db101d516731c822778f253bc8a3bb3f478f61c3e6d72",
+      "bytes": 20385,
+      "source": "skills/wx-search/cli.js"
+    },
+    "skills/wx-search/package.json": {
+      "sha256": "4e61e559f01a19e70532a6d4db7dd2e94e61301090ecfdc20728340fcb515762",
+      "bytes": 230,
+      "source": "skills/wx-search/package.json"
+    },
+    "skills/wx-search/SKILL.md": {
+      "sha256": "da31ccfd34fb688f920bdc8053294be37f8aece04e55ce7220d76a6fc24a6311",
+      "bytes": 8896,
+      "source": "skills/wx-search/SKILL.md"
+    },
+    "skills/wx-search/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/wx-search/src/client.js"
+    },
+    "skills/wx-search/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/wx-search/src/config.js"
+    },
+    "skills/wx-search/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/wx-search/src/output.js"
+    },
+    "skills/wx-search/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/wx-search/src/pay.js"
+    },
+    "skills/wx-video-comments/cli.js": {
+      "sha256": "c98f48011155a7be90633530e7b4a7d27171273362cad5d98da4193d43406b07",
+      "bytes": 20619,
+      "source": "skills/wx-video-comments/cli.js"
+    },
+    "skills/wx-video-comments/package.json": {
+      "sha256": "21ecaf40c3e34d70689983c5533c70ad93da94b5dc4ac3ead940c8125d69d400",
+      "bytes": 240,
+      "source": "skills/wx-video-comments/package.json"
+    },
+    "skills/wx-video-comments/SKILL.md": {
+      "sha256": "3741935aede2b35881f7f3e95e37a5b9bf04773e936f9251539e49f2d3723994",
+      "bytes": 9284,
+      "source": "skills/wx-video-comments/SKILL.md"
+    },
+    "skills/wx-video-comments/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/wx-video-comments/src/client.js"
+    },
+    "skills/wx-video-comments/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/wx-video-comments/src/config.js"
+    },
+    "skills/wx-video-comments/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/wx-video-comments/src/output.js"
+    },
+    "skills/wx-video-comments/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/wx-video-comments/src/pay.js"
+    },
+    "skills/wx-video-list/cli.js": {
+      "sha256": "3c58f628e48739e58f0df7b45c333aeb9bcc59795700fb69f004c661edc1c2e6",
+      "bytes": 20846,
+      "source": "skills/wx-video-list/cli.js"
+    },
+    "skills/wx-video-list/package.json": {
+      "sha256": "20e51ddd32743da07dd571dab2df4e8812208fb9e7551edf358e2f000b7b81c0",
+      "bytes": 232,
+      "source": "skills/wx-video-list/package.json"
+    },
+    "skills/wx-video-list/SKILL.md": {
+      "sha256": "442aa72cbfa77cb835f7332b5a37ce9bc1dab40dfc5ac7c477e6769167863486",
+      "bytes": 9911,
+      "source": "skills/wx-video-list/SKILL.md"
+    },
+    "skills/wx-video-list/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/wx-video-list/src/client.js"
+    },
+    "skills/wx-video-list/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/wx-video-list/src/config.js"
+    },
+    "skills/wx-video-list/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/wx-video-list/src/output.js"
+    },
+    "skills/wx-video-list/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/wx-video-list/src/pay.js"
+    },
+    "skills/xhs-comments/cli.js": {
+      "sha256": "f6673dcc2a7db7da17033dc8feaeced544df4d6d45574cc3ff6ea61b0df9c4f3",
+      "bytes": 19119,
+      "source": "skills/xhs-comments/cli.js"
+    },
+    "skills/xhs-comments/package.json": {
+      "sha256": "02b2b893125a4a1e9726e3385826848554aa761d48c3a9b5975b6059f42a9255",
+      "bytes": 272,
+      "source": "skills/xhs-comments/package.json"
+    },
+    "skills/xhs-comments/SKILL.md": {
+      "sha256": "4134894966933d2603542b1a938452db5f1023b1ee37d8e88857aeab79596d13",
+      "bytes": 19053,
+      "source": "skills/xhs-comments/SKILL.md"
+    },
+    "skills/xhs-comments/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/xhs-comments/src/client.js"
+    },
+    "skills/xhs-comments/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/xhs-comments/src/config.js"
+    },
+    "skills/xhs-comments/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/xhs-comments/src/output.js"
+    },
+    "skills/xhs-comments/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/xhs-comments/src/pay.js"
+    },
+    "skills/xhs-convert-url-pro/API.md": {
+      "sha256": "24f8baa6bf1a0002cf3337be0e57b45aacff00423ab16a95431de09e646deed6",
+      "bytes": 20475,
+      "source": "skills/xhs-convert-url-pro/API.md"
+    },
+    "skills/xhs-convert-url-pro/cli.js": {
+      "sha256": "9ea3662d5c63f0befdd130433712ab75c44bdadb570a26a958130c1fc3ef4e7f",
+      "bytes": 13663,
+      "source": "skills/xhs-convert-url-pro/cli.js"
+    },
+    "skills/xhs-convert-url-pro/openapi.yaml": {
+      "sha256": "8f30e949569869b2c28c47bab93cf62be32e65751cfc59bf28b06ed6cc879330",
+      "bytes": 11320,
+      "source": "skills/xhs-convert-url-pro/openapi.yaml"
+    },
+    "skills/xhs-convert-url-pro/package.json": {
+      "sha256": "589ebbd32f919112473a68c09be10b2e94ea4349f13fb10d66db8ab28bc87be5",
+      "bytes": 312,
+      "source": "skills/xhs-convert-url-pro/package.json"
+    },
+    "skills/xhs-convert-url-pro/SKILL.md": {
+      "sha256": "9fe9123fca037392f18ad3de7a284d2e1b83d34a22ce5df0d435001a7dddc279",
+      "bytes": 15738,
+      "source": "skills/xhs-convert-url-pro/SKILL.md"
+    },
+    "skills/xhs-convert-url-pro/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/xhs-convert-url-pro/src/client.js"
+    },
+    "skills/xhs-convert-url-pro/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/xhs-convert-url-pro/src/config.js"
+    },
+    "skills/xhs-convert-url-pro/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/xhs-convert-url-pro/src/output.js"
+    },
+    "skills/xhs-convert-url-pro/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/xhs-convert-url-pro/src/pay.js"
+    },
+    "skills/xhs-dpt/cli.js": {
+      "sha256": "8e9a245d47d2429e06340ad51815d61976c508f03578b844d7ef27cf48ef59d4",
+      "bytes": 19938,
+      "source": "skills/xhs-dpt/cli.js"
+    },
+    "skills/xhs-dpt/package.json": {
+      "sha256": "c09502ccdb3d92392e1f6467b7e2e7bbcc53a09659a7db0bcfae773bb80ed9e0",
+      "bytes": 240,
+      "source": "skills/xhs-dpt/package.json"
+    },
+    "skills/xhs-dpt/SKILL.md": {
+      "sha256": "f3550dbd6ac6330ca7e4ab01862d0c346302d57816dd15cd986f56901f057d1f",
+      "bytes": 16661,
+      "source": "skills/xhs-dpt/SKILL.md"
+    },
+    "skills/xhs-dpt/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/xhs-dpt/src/client.js"
+    },
+    "skills/xhs-dpt/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/xhs-dpt/src/config.js"
+    },
+    "skills/xhs-dpt/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/xhs-dpt/src/output.js"
+    },
+    "skills/xhs-dpt/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/xhs-dpt/src/pay.js"
+    },
+    "skills/xhs-hot/cli.js": {
+      "sha256": "ec5f2accc501943df76343e7cb281e2dd0b03629fe144b879f3cd5ed976322cf",
+      "bytes": 13141,
+      "source": "skills/xhs-hot/cli.js"
+    },
+    "skills/xhs-hot/package.json": {
+      "sha256": "091308be9d05b11aa474adf743acee1b20e12768a699f37201eea8a7fba75c55",
+      "bytes": 255,
+      "source": "skills/xhs-hot/package.json"
+    },
+    "skills/xhs-hot/SKILL.md": {
+      "sha256": "79bb6d2e12eead18bb5cd0de91070ddd9e2de9e5a978311526cef22e6bef417d",
+      "bytes": 7388,
+      "source": "skills/xhs-hot/SKILL.md"
+    },
+    "skills/xhs-hot/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/xhs-hot/src/client.js"
+    },
+    "skills/xhs-hot/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/xhs-hot/src/config.js"
+    },
+    "skills/xhs-hot/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/xhs-hot/src/output.js"
+    },
+    "skills/xhs-hot/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/xhs-hot/src/pay.js"
+    },
+    "skills/xhs-profile/cli.js": {
+      "sha256": "4c6a3d7eb6c7ee544b92dd2adc72aecf8990a97cabe6af3dcb750548232d3037",
+      "bytes": 23409,
+      "source": "skills/xhs-profile/cli.js"
+    },
+    "skills/xhs-profile/package.json": {
+      "sha256": "1343489dda1a0e2fcafe4840e09e0514b8759e17395d5111ab370886f3861c9e",
+      "bytes": 305,
+      "source": "skills/xhs-profile/package.json"
+    },
+    "skills/xhs-profile/SKILL.md": {
+      "sha256": "2dee662b5ef9e94a74dd64623b0d44d457241518363ef543d1e74c284f87007a",
+      "bytes": 20665,
+      "source": "skills/xhs-profile/SKILL.md"
+    },
+    "skills/xhs-profile/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/xhs-profile/src/client.js"
+    },
+    "skills/xhs-profile/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/xhs-profile/src/config.js"
+    },
+    "skills/xhs-profile/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/xhs-profile/src/output.js"
+    },
+    "skills/xhs-profile/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/xhs-profile/src/pay.js"
+    },
+    "skills/xhs-search/cli.js": {
+      "sha256": "91ba50c2d9bc70adfb5d2a9292ba8c5bd8d81c3153b667d65cb31ab94ab21dfa",
+      "bytes": 21799,
+      "source": "skills/xhs-search/cli.js"
+    },
+    "skills/xhs-search/package.json": {
+      "sha256": "4e4f4b782131817a52aeb9396079a08a527ee3e6a8534364ff21ec243efe3da0",
+      "bytes": 277,
+      "source": "skills/xhs-search/package.json"
+    },
+    "skills/xhs-search/SKILL.md": {
+      "sha256": "c6586aa9f468e9d25e681c0bd3d4eb7178641975ca159bcb9faab6b2eb62a7f0",
+      "bytes": 19874,
+      "source": "skills/xhs-search/SKILL.md"
+    },
+    "skills/xhs-search/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/xhs-search/src/client.js"
+    },
+    "skills/xhs-search/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/xhs-search/src/config.js"
+    },
+    "skills/xhs-search/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/xhs-search/src/output.js"
+    },
+    "skills/xhs-search/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/xhs-search/src/pay.js"
+    },
+    "skills/xhs-short-url/cli.js": {
+      "sha256": "e9705cd6bbbb3997e41f3228876f5e6918d7802af82ec10735cddc818a2fc75f",
+      "bytes": 18511,
+      "source": "skills/xhs-short-url/cli.js"
+    },
+    "skills/xhs-short-url/package.json": {
+      "sha256": "108933306ff98f49e9666f7de23dfd133154a2ecd3a3ff84625cc5f88dfc7820",
+      "bytes": 274,
+      "source": "skills/xhs-short-url/package.json"
+    },
+    "skills/xhs-short-url/SKILL.md": {
+      "sha256": "6299939545c832a21eae60aacadad89e58631d354f0dbe114649b4002e97b5e0",
+      "bytes": 9634,
+      "source": "skills/xhs-short-url/SKILL.md"
+    },
+    "skills/xhs-short-url/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/xhs-short-url/src/client.js"
+    },
+    "skills/xhs-short-url/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/xhs-short-url/src/config.js"
+    },
+    "skills/xhs-short-url/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/xhs-short-url/src/output.js"
+    },
+    "skills/xhs-short-url/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/xhs-short-url/src/pay.js"
+    },
+    "skills/zh-huida/cli.js": {
+      "sha256": "ab42b6ebcc41584ed7c08b1420bb6e671714af81fe02b0ca922e881e796bd100",
+      "bytes": 25272,
+      "source": "skills/zh-answers/cli.js"
+    },
+    "skills/zh-huida/package.json": {
+      "sha256": "8e3a687ff1ed6554b6480641befd8d4353813d497f27fd0d20b3a008ad33efeb",
+      "bytes": 190,
+      "source": "skills/zh-answers/package.json"
+    },
+    "skills/zh-huida/SKILL.md": {
+      "sha256": "235b8e292850a265ac7d36046f2a16cc2832b9899af2e17e6c20105a2787aa1b",
+      "bytes": 9834,
+      "source": "skills/zh-answers/SKILL.md"
+    },
+    "skills/zh-huida/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/zh-answers/src/client.js"
+    },
+    "skills/zh-huida/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/zh-answers/src/config.js"
+    },
+    "skills/zh-huida/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/zh-answers/src/output.js"
+    },
+    "skills/zh-huida/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/zh-answers/src/pay.js"
+    },
+    "skills/zh-article-search/cli.js": {
+      "sha256": "f708aecbe3c460282c46a26f6774c9dd44177cdd69d81fd61063e382d18f304c",
+      "bytes": 25240,
+      "source": "skills/zh-article-search/cli.js"
+    },
+    "skills/zh-article-search/package.json": {
+      "sha256": "5299386b728629f237e9fe30883eed9cbaca135a2b998247545eb6682a1fa58b",
+      "bytes": 199,
+      "source": "skills/zh-article-search/package.json"
+    },
+    "skills/zh-article-search/SKILL.md": {
+      "sha256": "705f55feaa41b36561374014b86c857b30e78961a1541380d1ea93a4239b92c4",
+      "bytes": 9574,
+      "source": "skills/zh-article-search/SKILL.md"
+    },
+    "skills/zh-article-search/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/zh-article-search/src/client.js"
+    },
+    "skills/zh-article-search/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/zh-article-search/src/config.js"
+    },
+    "skills/zh-article-search/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/zh-article-search/src/output.js"
+    },
+    "skills/zh-article-search/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/zh-article-search/src/pay.js"
+    },
+    "skills/zh-zhuanlan/cli.js": {
+      "sha256": "757667185bca84f52215e28eb29fe9eea5be58cb45ddc24e70b0f65d34b81d56",
+      "bytes": 25364,
+      "source": "skills/zh-articles/cli.js"
+    },
+    "skills/zh-zhuanlan/package.json": {
+      "sha256": "901a6f91da67a819389c186ef45170f08799464a418663bb3336e1234ae32d15",
+      "bytes": 199,
+      "source": "skills/zh-articles/package.json"
+    },
+    "skills/zh-zhuanlan/SKILL.md": {
+      "sha256": "6dc8c271654704b8e7a66b1cdbb04e0f9e678865483d4761f31903fa03bec42a",
+      "bytes": 10041,
+      "source": "skills/zh-articles/SKILL.md"
+    },
+    "skills/zh-zhuanlan/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/zh-articles/src/client.js"
+    },
+    "skills/zh-zhuanlan/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/zh-articles/src/config.js"
+    },
+    "skills/zh-zhuanlan/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/zh-articles/src/output.js"
+    },
+    "skills/zh-zhuanlan/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/zh-articles/src/pay.js"
+    },
+    "skills/zh-pinglun/cli.js": {
+      "sha256": "577d9c113262b782880914ded0be8c8e89d0161b287615e2ed1ef7dd4aa2298a",
+      "bytes": 21352,
+      "source": "skills/zh-comments/cli.js"
+    },
+    "skills/zh-pinglun/package.json": {
+      "sha256": "f79eb58f5cbce3d5e1d3685ce0bea24d251dc71dcd1aefe5748ef6edbd0e59ce",
+      "bytes": 192,
+      "source": "skills/zh-comments/package.json"
+    },
+    "skills/zh-pinglun/SKILL.md": {
+      "sha256": "4ada99fde9a2a34857a58f9492be64e2ec1c058840bc3d145cb69963ec96753b",
+      "bytes": 16705,
+      "source": "skills/zh-comments/SKILL.md"
+    },
+    "skills/zh-pinglun/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/zh-comments/src/client.js"
+    },
+    "skills/zh-pinglun/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/zh-comments/src/config.js"
+    },
+    "skills/zh-pinglun/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/zh-comments/src/output.js"
+    },
+    "skills/zh-pinglun/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/zh-comments/src/pay.js"
+    },
+    "skills/zh-article-detail/cli.js": {
+      "sha256": "e104384f5e5e042060e095f73cc281987fa6e33413331b73af4c8c42c437c45b",
+      "bytes": 25463,
+      "source": "skills/zh-detail/cli.js"
+    },
+    "skills/zh-article-detail/package.json": {
+      "sha256": "ab9c954e837f48f218839e86f56a8f5e0255729db7afecccfb07d8f0499137be",
+      "bytes": 205,
+      "source": "skills/zh-detail/package.json"
+    },
+    "skills/zh-article-detail/SKILL.md": {
+      "sha256": "244d38e5b03f7eb1854e07b6ad039e95f6079f9e5ea326191ff02f35a045b5bc",
+      "bytes": 10250,
+      "source": "skills/zh-detail/SKILL.md"
+    },
+    "skills/zh-article-detail/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/zh-detail/src/client.js"
+    },
+    "skills/zh-article-detail/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/zh-detail/src/config.js"
+    },
+    "skills/zh-article-detail/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/zh-detail/src/output.js"
+    },
+    "skills/zh-article-detail/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/zh-detail/src/pay.js"
+    },
+    "skills/zh-user-profile/cli.js": {
+      "sha256": "a3f0e68414a8d404c78e2c4c1f237d50048017982b6015d46526f826b8f1f745",
+      "bytes": 25349,
+      "source": "skills/zh-profile/cli.js"
+    },
+    "skills/zh-user-profile/package.json": {
+      "sha256": "9b1e785b9bf50bf685ef8d9b9e91186841493e2104cd9731e2ec0a5ed0f914c7",
+      "bytes": 197,
+      "source": "skills/zh-profile/package.json"
+    },
+    "skills/zh-user-profile/SKILL.md": {
+      "sha256": "5f687d8b52563d2241bebc271840fb31ab3b8baabb65306fce2b930e647d8e3c",
+      "bytes": 9776,
+      "source": "skills/zh-profile/SKILL.md"
+    },
+    "skills/zh-user-profile/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/zh-profile/src/client.js"
+    },
+    "skills/zh-user-profile/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/zh-profile/src/config.js"
+    },
+    "skills/zh-user-profile/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/zh-profile/src/output.js"
+    },
+    "skills/zh-user-profile/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/zh-profile/src/pay.js"
+    },
+    "skills/zh-keyword-search/cli.js": {
+      "sha256": "81aa7efb1dc7bbe23406afc11a5bf4d0e80eb294044e36a3d22adc0b602334e0",
+      "bytes": 25214,
+      "source": "skills/zh-search/cli.js"
+    },
+    "skills/zh-keyword-search/package.json": {
+      "sha256": "eac2568158809f8b11a13a98e88d45bb054597ab3f86b6ca7b75a37e93b30f91",
+      "bytes": 202,
+      "source": "skills/zh-search/package.json"
+    },
+    "skills/zh-keyword-search/SKILL.md": {
+      "sha256": "0bdee1942254c4ab7b2a041bd4e4ddbc415d0d8c5b0019183b879deb1d09a60b",
+      "bytes": 9527,
+      "source": "skills/zh-search/SKILL.md"
+    },
+    "skills/zh-keyword-search/src/client.js": {
+      "sha256": "2def5136bfadf50310afeaa1bb012c2c39baf8175325067187d93cdd1ef05822",
+      "bytes": 22232,
+      "source": "skills/zh-search/src/client.js"
+    },
+    "skills/zh-keyword-search/src/config.js": {
+      "sha256": "6aa26c25f3c2e62db66c9c70c7ad30469c376e83903d3253d6cb1ab92ee38615",
+      "bytes": 4370,
+      "source": "skills/zh-search/src/config.js"
+    },
+    "skills/zh-keyword-search/src/output.js": {
+      "sha256": "e4d3162b91ea8c2e8d73d6814f449dc563ecce216de187223b0bfa1e4d5a7aa9",
+      "bytes": 3552,
+      "source": "skills/zh-search/src/output.js"
+    },
+    "skills/zh-keyword-search/src/pay.js": {
+      "sha256": "19281e3139860d0bb1243ecb9ff6088d113f2106e7b08ae9692f4e6e814255b0",
+      "bytes": 7646,
+      "source": "skills/zh-search/src/pay.js"
+    }
+  }
+}

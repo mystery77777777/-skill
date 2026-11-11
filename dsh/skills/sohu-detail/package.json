@@ -1,0 +1,10 @@
+{
+  "name": "sohu-detail",
+  "version": "1.0.0",
+  "private": true,
+  "description": "搜狐文章详情采集 Skill CLI (标题/作者/正文/封面/评论数, 1 条链接 = 1 点数)",
+  "main": "cli.js",
+  "engines": {
+    "node": ">=18"
+  }
+}

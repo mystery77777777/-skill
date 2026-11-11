@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" role="img" aria-label="Social Media Collector">
+  <rect width="48" height="48" rx="11" fill="#0F172A"/>
+  <g fill="none" stroke="#38BDF8" stroke-width="2.6" stroke-linecap="round">
+    <path d="M13 31v-6"/>
+    <path d="M20 34V20"/>
+    <path d="M27 34V14"/>
+    <path d="M34 34V24"/>
+  </g>
+  <circle cx="34" cy="17" r="3.4" fill="#F59E0B"/>
+</svg>
