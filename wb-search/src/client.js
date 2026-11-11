@@ -159,7 +159,13 @@ class ApiClient {
     return this.request('POST', '/auth/logout');
   }
   createCliSession() {
-    return this.request('POST', '/auth/cli-session');
+    // 上送本 Skill 名 (取自 package.json, 与 --skill-name 校验同源, 不依赖 agent 传参):
+    // 服务端记录到 users.source_skill (仅首绑), 用于统计用户从哪个 Skill 下载而来
+    let pkg = {};
+    try { pkg = require('../package.json'); } catch { /* _shared 模板本身不直接运行 */ }
+    const body = {};
+    if (pkg.name && /^[a-z0-9]+(-[a-z0-9]+)*$/.test(pkg.name)) body.skill_name = pkg.name;
+    return this.request('POST', '/auth/cli-session', { body });
   }
   checkCliSession(accessToken) {
     return this.request('POST', '/auth/cli-session/check', { body: { access_token: accessToken } });

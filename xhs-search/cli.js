@@ -28,7 +28,7 @@ const {
 const { handleFatal } = require('./src/pay');
 
 const CAPABILITY = 'xhs_search';
-const VERSION = '2.0.1';
+const VERSION = '2.1.0';
 const MAX_COUNT = 500;        // 单任务采集条数上限 (服务端 search.max_count)
 const DEFAULT_COUNT = 50;
 const BILL_UNIT = 20;         // 计费粒度: 一次接口返回的主帖数
@@ -37,10 +37,15 @@ const DOWNLOAD_TIMEOUT_MS = 60000;
 
 const SORT_WHITELIST = new Set(['general', 'time_descending', 'popularity_descending',
   'comment_descending', 'collect_descending']);
+// 筛选项白名单 (与搜索页「筛选」面板一致; 非法值回退 0=不限, 不拒单)
+const NOTE_TIMES = new Set([0, 1, 7, 180]);   // 0=不限 1=一天内 7=一周内 180=半年内
+const NOTE_RANGES = new Set([0, 1, 2, 3]);    // 0=不限 1=已看过 2=未看过 3=已关注
+const POS_DISTANCES = new Set([0, 1, 2]);     // 0=不限 1=同城 2=附近
 
 // ---------------------------------------------------------------- 参数解析
 
-const VALUE_FLAGS = new Set(['yuan', 'channel', 'keyword', 'count', 'sort', 'note-type', 'interval',
+const VALUE_FLAGS = new Set(['yuan', 'channel', 'keyword', 'count', 'sort', 'note-type',
+  'note-time', 'note-range', 'pos-distance', 'interval',
   'timeout', 'token', 'base-url', 'access-token', 'out', 'skill-name', 'ai-entry']);
 const BOOL_FLAGS = new Set(['wait', 'help', 'link', 'check', 'force', 'version']);
 
@@ -89,11 +94,15 @@ const USAGE = `小红书搜索笔记采集 CLI (关键词搜索, 采集笔记列
   register --check --access-token <串>  用户完成注册后确认并保存 token
   login --link                      生成登录二维码/链接（推荐）
   login --check --access-token <串> 用户完成授权后确认并保存 token
-  submit --keyword <关键词> [--count N] [--sort S] [--note-type T] [--wait] [--timeout 秒] [--force]
+  submit --keyword <关键词> [--count N] [--sort S] [--note-type T]
+         [--note-time D] [--note-range R] [--pos-distance P] [--wait] [--timeout 秒] [--force]
                                     提交搜索采集任务（每任务 1 个关键词, 1~500 条；
                                     --sort: general/time_descending/popularity_descending/
                                     comment_descending/collect_descending (默认 general);
-                                    --note-type: 0=全部 1=视频 2=图文 (默认 0);
+                                    --note-type: 0=不限 1=视频 2=图文 (默认 0);
+                                    --note-time: 0=不限 1=一天内 7=一周内 180=半年内 (默认 0);
+                                    --note-range: 0=不限 1=已看过 2=未看过 3=已关注 (默认 0);
+                                    --pos-distance: 0=不限 1=同城 2=附近 (默认 0);
                                     --force 跳过 24h 内容去重强制重提；
                                     --wait 等待结果, 默认超时 600s（节点滚动约 3-5 分钟））
   query <task_id> [--wait]          查询任务状态与结果
@@ -214,25 +223,46 @@ async function cmdSubmit(opts) {
   // sort: 白名单外回退 general (与服务端一致, 不拒单)
   const sort = SORT_WHITELIST.has(opts.sort) ? opts.sort : 'general';
 
-  // note_type: 0=全部 1=视频 2=图文
+  // note_type: 0=不限 1=视频 2=图文
   if (opts.noteType !== undefined && !/^[012]$/.test(String(opts.noteType))) {
-    throw new UsageError('--note-type 仅支持 0=全部 1=视频 2=图文');
+    throw new UsageError('--note-type 仅支持 0=不限 1=视频 2=图文');
   }
   const noteType = opts.noteType !== undefined ? parseInt(opts.noteType, 10) : 0;
+
+  // 其余筛选项: 白名单外回退 0=不限 (与服务端一致, 不拒单)
+  const pickInt = (raw, whitelist) => {
+    const n = parseInt(raw, 10);
+    return whitelist.has(n) ? n : 0;
+  };
+  const noteTime = pickInt(opts.noteTime, NOTE_TIMES);
+  const noteRange = pickInt(opts.noteRange, NOTE_RANGES);
+  const posDistance = pickInt(opts.posDistance, POS_DISTANCES);
 
   // 提交前读价格, 本地透出预估点数 (免登录接口, 失败兜底 5)
   const { price } = await fetchPrice(cfg.baseUrl);
   const billUnits = ceilDiv(count, BILL_UNIT);
   const estimatedPoints = billUnits * price;
 
-  const items = [{ id: 1, payload: { keyword, count, sort, note_type: noteType } }];
+  const items = [{
+    id: 1,
+    payload: {
+      keyword, count, sort, note_type: noteType,
+      note_time: noteTime, note_range: noteRange, pos_distance: posDistance,
+    },
+  }];
   // 幂等键按参数派生: 同参数重试复用同键 (服务端幂等, 不重复扣费);
   // --force 时混入时间戳生成新键 (服务端同时跳过 24h 去重)
-  const idemSource = `${keyword}|${count}|${sort}|${noteType}` + (opts.force ? `|#force:${Date.now()}` : '');
+  const idemSource = `${keyword}|${count}|${sort}|${noteType}|${noteTime}|${noteRange}|${posDistance}`
+    + (opts.force ? `|#force:${Date.now()}` : '');
   const idempotencyKey = crypto.createHash('sha256').update(idemSource).digest('hex').slice(0, 32);
 
+  const timeLabel = { 0: '不限', 1: '一天内', 7: '一周内', 180: '半年内' }[noteTime];
+  const rangeLabel = { 0: '不限', 1: '已看过', 2: '未看过', 3: '已关注' }[noteRange];
+  const posLabel = { 0: '不限', 1: '同城', 2: '附近' }[posDistance];
   process.stderr.write(
-    `提交搜索采集任务: 关键词="${keyword}" 数量=${count} 排序=${sort} 类型=${['全部', '视频', '图文'][noteType]}\n` +
+    `提交搜索采集任务: 关键词="${keyword}" 数量=${count} 排序=${sort} ` +
+    `类型=${['不限', '视频', '图文'][noteType]} 发布时间=${timeLabel} ` +
+    `搜索范围=${rangeLabel} 位置距离=${posLabel}\n` +
     `计费: 预扣 ${billUnits}×${price}=${estimatedPoints} 点 (每 20 条=${price} 点), ` +
     `按实采量结算退差, 零结果/失败全额返还 (幂等键 ${idempotencyKey}${opts.force ? ', force' : ''})...\n`);
 
@@ -250,10 +280,14 @@ async function cmdSubmit(opts) {
     intervalSec: parsePositiveNumber(opts.interval, 'interval', 5),
     timeoutSec: parsePositiveNumber(opts.timeout, 'timeout', 600),
   });
+  const itemResult = (task.items && task.items[0] && task.items[0].result) || {};
   process.stderr.write(
-    `任务完成: status=${task.status}，实采 ${(task.items && task.items[0] && task.items[0].result
-      && task.items[0].result.collected_count) || 0} 条，` +
-    `请查看 result 里的 settle_charged(实收点数)/refunded_diff(退差点数) 如实汇报给用户。\n`);
+    `任务完成: status=${task.status}，实采 ${itemResult.collected_count || 0} 条，` +
+    `请查看 result 里的 settle_charged(实收点数)/refunded_diff(退差点数) 如实汇报给用户。` +
+    (itemResult.filter_fallback
+      ? `注意: 节点筛选降级(filter_fallback=true, ${(itemResult.filter_errors || []).join('; ')})，` +
+        '本次结果为不筛选数据，必须如实告知用户。\n'
+      : '\n'));
   printOk(task);
 }
 

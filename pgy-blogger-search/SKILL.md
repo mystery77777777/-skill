@@ -186,7 +186,7 @@ node cli.js export <task_id> --wait --out 蒲公英博主.csv --skill-name pgy-b
 | 3001 | 点数不足 | 提示充值，不要重试（退出码 3） |
 | 3003 / 3004 | 任务或导出不存在 | 检查 task_id 是否属于当前账号 |
 | `status=failed` + 零结果 | 关键词无结果或页面异常 | 点数已全额返还，换个关键词重试 |
-| `status=failed` + 登录/签名失效 | 蒲公英 cookie 过期或签名失败 | 点数已全额返还；联系客服刷新节点登录态 |
+| `status=failed` + 登录/签名失效 | 蒲公英 cookie 过期或签名失败 | 点数已全额返还；客服更新 DB system_config.pgy_cookie 后自动恢复（无需在采集节点登录） |
 | 4290 | 触发限流 | 稍后重试 |
 | TIMEOUT | 轮询超时 | 稍后 `query <task_id>` 再查（退出码 5） |
 | NETWORK_ERROR | 网络/服务不可达 | 检查 base_url（退出码 4） |
